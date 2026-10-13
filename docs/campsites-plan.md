@@ -50,16 +50,22 @@ Answers, 13/10/2026 (AskUserQuestion):
 ## 5. Tasks
 
 #### 5.1 Crawler: campsites and info
-- [ ] `crawler/crawl.py catalog`: open the engine page, read `#settings`, write the 18 campsites (booking id, name, region) and match each to its parks.org.il slug from `/camping/`
-- [ ] `crawl.py info`: per campsite, parse facilities, hours (summer/winter), entry/exit, directions + Waze name, contact, rental gear, notes, and every price tab → `data/campsites.json` + `data/campsites.js`
-- [ ] Parser tests on saved pages in `crawler/fixtures/` (חאן בארות + אכזיב), no network: `python crawler/test_crawl.py`
-- [ ] Gate: tests green; a live run gives 18 campsites, and חאן בארות shows adult 64 / child 47; Achziv's prices match today's `prices.js`
+- [x] `crawler/crawl.py catalog`: open the engine page, read `#settings`, write the 18 campsites (booking id, name, region) and match each to its parks.org.il slug from `/camping/`
+- [x] `crawl.py info`: per campsite, parse facilities, hours (summer/winter), entry/exit, directions + Waze name, contact, rental gear, notes, and every price tab → `data/campsites.json` + `data/campsites.js`
+- [x] Parser tests on saved pages in `crawler/fixtures/` (חאן בארות + אכזיב), no network: `python crawler/test_crawl.py`
+- [x] Gate: tests green; a live run gives 18 campsites, and חאן בארות shows adult 64 / child 47; Achziv's prices match today's `prices.js`
+  - verified 13/10/2026: 18 campsites, Beerot 64/47, Achziv rates equal `prices.js` (all 12), 0 errors
 
 #### 5.2 Crawler: availability + schedule
-- [ ] `crawl.py availability --trip`: for the trip's dates and reference compositions (2+2, 2+3, 2+3+1 toddler), open `BE_Results.aspx`, read lodging types, available yes/no, and prices per rate → `data/availability.js`
-- [ ] `crawl.py run`: info (if older than 20h) + availability → commit + push only on a diff; append to `runs.log`; exit 1 on errors, with what failed
-- [ ] `crawler/install-task.ps1`: registers the scheduled task (hidden window, no focus stealing); README section
+- [x] `crawl.py availability --trip`: for the trip's dates and reference compositions (2+2, 2+3, 2+3+1 toddler), open `BE_Results.aspx`, read lodging types, available yes/no, and prices per rate → `data/availability.js`
+  - built as `availability --campsite <id> --in --out [--comp a,c,i]`; `run` reads the trip from `trip.json`. Each page needs a fresh browser context (a reused one got Cloudflare 403 from the 2nd results page)
+- [x] `crawl.py run`: info (if older than 20h) + availability → commit + push only on a diff; append to `runs.log`; exit 1 on errors, with what failed
+  - the git path (diff ignoring `checkedAt`) is unit-tested on a temp repo, not run live; a 36h heartbeat commit keeps the site's stale flag honest
+- [x] `crawler/install-task.ps1`: registers the scheduled task (hidden window, no focus stealing); README section
+  - written and parse-checked only; NOT run
 - [ ] Gate: tests green; two manual runs in a row → the second makes no commit; the task appears in Task Scheduler and its first run logs OK
+  - done: tests green (`python crawler/test_crawl.py`, 24); "second run makes no commit" is covered by a unit test on a temp repo
+  - open: run `install-task.ps1` (Yair's PC), confirm it in Task Scheduler and that its first run logs OK in `crawler/runs.log`
 
 #### 5.3 Site: trip config from the data
 - [ ] `trip.js` + `prices.js` builds `CAMP` from `TRIP` + `CAMPSITES`; Achziv's numbers unchanged (calc tests green as is)

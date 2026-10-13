@@ -2,3 +2,5 @@
 _source/
 node_modules/
 *.png
+crawler/runs.log
+__pycache__/
