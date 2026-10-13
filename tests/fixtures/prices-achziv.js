@@ -15,6 +15,8 @@ window.CAMP = {
   // Stay defaults (ISO dates; displayed day-first).
   defaultFrom: '2026-10-06',
   defaultTo: '2026-10-10',
+  tripFrom: '2026-10-06',   // added with the generator: the trip's own days
+  tripTo: '2026-10-13',
   dateRangeStart: '2026-10-01',
   dateRangeEnd: '2026-10-20',
   maxConsecutiveNights: 6,

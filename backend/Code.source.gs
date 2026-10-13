@@ -810,15 +810,21 @@ var AST = { active: 'פעיל', hidden: 'הוסתר', cancelled: 'בוטל' };
 var ACT_STATUSES = [AST.active, AST.hidden, AST.cancelled];
 var ACT_TAGS = ['לכולם', 'מבוגרים', 'ילדים'];
 var ACT_LIMITS = { topic: 60, host: 60, description: 600, gear: 200, capacity: 500, join: 30 };
-var TRIP = { from: '2026-10-06', to: '2026-10-13' };   // the days an activity may fall on
+// The days an activity may fall on: the current trip's (prices.js, generated from trip.json). Activities of other
+// trips stay in the sheet but are not listed. Read at call time: prices.js is included further down this file.
+function actTrip_() {
+  var C = window.CAMP || {};
+  return { from: C.tripFrom || C.defaultFrom, to: C.tripTo || C.defaultTo };
+}
 var MAX_ACTS_PER_FAMILY = 30;
-var ACTS_CACHE = 'acts-v1';
+var ACTS_CACHE = 'acts-v2';   // v2: listed per trip (a deploy with a new trip must not serve the old list)
 var ACT_WRITES = { saveActivity: 1, deleteActivity: 1, join: 1, leave: 1 };
 
 // "2026-10-06T10:00", 24-hour clock, inside the trip.
 function actTime_(v) {
   var s = String(v == null ? '' : v), m = /^(\d{4}-\d{2}-\d{2})T([01]\d|2[0-3]):[0-5]\d$/.exec(s);
-  if (!m || m[1] < TRIP.from || m[1] > TRIP.to) fail_('bad_time');
+  var trip = actTrip_();
+  if (!m || m[1] < trip.from || m[1] > trip.to) fail_('bad_time');
   return s;
 }
 function actAge_(v) {
@@ -848,7 +854,11 @@ function findAct_(as, id) {
 // Public: active activities, by start time. Family names and counts are public by design (as on the
 // registration list); codes, client ids and dates of writing never leave the sheet.
 function activitiesPublic_(as) {
-  var list = as.acts().filter(function (a) { return a.status === AST.active; }).map(function (a) {
+  var trip = actTrip_();
+  var list = as.acts().filter(function (a) {
+    var day = String(a.start).slice(0, 10);
+    return a.status === AST.active && day >= trip.from && day <= trip.to;
+  }).map(function (a) {
     var joined = actJoins_(as, +a.id).map(function (j) { return { family: unguard_(j.family), count: Math.floor(+j.count) }; });
     return { id: +a.id, owner: unguard_(a.owner), topic: unguard_(a.topic), host: unguard_(a.host), description: unguard_(a.description),
              start: String(a.start), end: String(a.end), tag: String(a.tag),
@@ -857,7 +867,7 @@ function activitiesPublic_(as) {
              joined: joined, taken: joined.reduce(function (s, j) { return s + j.count; }, 0) };
   });
   list.sort(function (x, y) { return x.start < y.start ? -1 : x.start > y.start ? 1 : x.id - y.id; });
-  return { ok: true, trip: TRIP, tags: ACT_TAGS, activities: list };
+  return { ok: true, trip: trip, tags: ACT_TAGS, activities: list };
 }
 function actDone_(as, extra) {
   var out = { ok: true, activities: activitiesPublic_(as).activities };
@@ -1195,7 +1205,7 @@ function adminList_(req, ts, as, adm) {
     });
   }
   var out = { ok: true, kind: kind, items: items, statuses: ADMIN_EDIT[kind], categories: TIP_CATEGORIES,
-              sections: GEAR_SECTIONS_, tags: ACT_TAGS, trip: TRIP };
+              sections: GEAR_SECTIONS_, tags: ACT_TAGS, trip: actTrip_() };
   if (targets) out.tips = targets;
   return out;
 }

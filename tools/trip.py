@@ -129,6 +129,9 @@ def build(trip, campsites):
         'apiUrl': trip.get('apiUrl', ''),
         'defaultFrom': trip['from'],
         'defaultTo': trip['to'],
+        # the trip's own days (activities may fall on them); the calculator's default stay is defaultFrom/To
+        'tripFrom': trip['from'],
+        'tripTo': trip['to'],
         'dateRangeStart': trip['dateRangeStart'],
         'dateRangeEnd': trip['dateRangeEnd'],
         'maxConsecutiveNights': trip['maxConsecutiveNights'],

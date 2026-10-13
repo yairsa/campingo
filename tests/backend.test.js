@@ -420,6 +420,15 @@ console.log('gear tests passed');
   assert.strictEqual(a1.taken, 0); assert.ok(!('clientId' in a1) && !('created' in a1));
   // a retry lands on the same row
   assert.strictEqual(add().id, 1); assert.strictEqual(as.actsRows.length, 1);
+  // the window is the current trip's (prices.js): another trip's activities stay in the sheet but are not listed
+  {
+    const camp = vm.runInContext('window.CAMP', ctx), was = [camp.tripFrom, camp.tripTo];
+    camp.tripFrom = '2026-11-12'; camp.tripTo = '2026-11-14';
+    const nov = A({ action: 'activities' });
+    assert.deepStrictEqual([nov.activities, nov.trip], [[], { from: '2026-11-12', to: '2026-11-14' }]);
+    assert.strictEqual(as.actsRows.length, 1);
+    [camp.tripFrom, camp.tripTo] = was;
+  }
 
   // validation
   const bad = (a, code) => assert.strictEqual(add({ activity: act(a) }, 'act-bad-000').error, code, JSON.stringify(a));

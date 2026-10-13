@@ -90,6 +90,7 @@ Design (13/10/2026, refines the "Trip config" row in §3):
 - [x] Switch the trip to חאן בארות 12–14/11/2026; "עודכן ב-…" with the stale flag
   - `trip.json` already names Beerot (box 1), so the branch's site is the November trip. The place tab says "עודכן ב-dd/MM HH:mm" from `CAMPSITES.checkedAt` and flags it past 3 days (checked with a shifted clock)
   - registration for November works only once stream A's backend is merged **and deployed by Yair**; until then the site says "השרת עוד לא עודכן"
+  - merged stream A (`feat/trip-backend`). Activities: the backend's window was hardcoded to October and sent back as `trip`, which the site adopts; it is now the current trip's (`CAMP.tripFrom/tripTo`, generated), other trips' activities stay in the sheet unlisted, cache key `acts-v2`
 - [ ] Gate: all repo gates (CLAUDE.md) + `stamp.py`; 360px check
 
 #### 5.4 Site: the חניונים explorer
