@@ -84,7 +84,9 @@ Design (13/10/2026, refines the "Trip config" row in §3):
   - 🔴 **all §5.3–5.5 work lives on branch `feat/trip-switch` (worktree `../wt-trip`)**: the scheduled crawler pushes `main`, so a local commit on `main` goes live within 6h. The merge to `main` waits for the §5.5 backend box *and* Yair's deploy of it (a Beerot `Code.gs` on the old backend would reprice October registrations)
   - `rtg.js` (`RTG.bookingUrl`, `RTG.splitOrders`, `RTG.LIMITS`) is the one deep-link builder for §5.4 and §5.5; `tests/rtg.test.js`
 - parallel streams (Yair 13/10: "parallel the work"), each a branch off `feat/trip-switch` in its own worktree, merged back by camp-campsites_2: **A** `feat/trip-backend` (§5.5 backend box + the site's `trip` field) · **B** `feat/explorer` (§5.4) · **C** `feat/booking` (§5.5 panel, prefill, e2e) · §5.3 boxes 2–4 stay here
-- [ ] Header, title, Waze/Maps and place tab come from the campsite record; hide the activities tab when the campsite has none
+- [x] Header, title, Waze/Maps and place tab come from the campsite record; ~~hide the activities tab when the campsite has none~~ — dropped: the activities tab is the group's own planner, not campsite data; its dates now come from `TRIP`
+  - `place.js` renders the header and `#place-info` from `TRIP` + `CAMPSITES`; Waze/Maps by the crawled Waze name; the share text from `window.PLACE`. The hand-written Achziv cards (accessibility, northern site) are in git history
+  - left for after the streams merge (they touch the same files): `app.js` "ההרשמה שלי לקמפינג באכזיב" (registration copy, stream A's area) and the welcome tour text "לקמפינג באכזיב" in `tour-texts.js` (a built-in text: the old one goes in its replaced-texts list)
 - [ ] Switch the trip to חאן בארות 12–14/11/2026; "עודכן ב-…" with the stale flag
 - [ ] Gate: all repo gates (CLAUDE.md) + `stamp.py`; 360px check
 

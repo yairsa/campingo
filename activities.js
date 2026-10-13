@@ -11,7 +11,7 @@
   'use strict';
   var C = window.CAMP, A = window.CampApi, esc = A.esc;
   var CACHE_KEY = 'achziv-acts-cache';
-  var TRIP = { from: '2026-10-06', to: '2026-10-13' };
+  var TRIP = window.TRIP ? { from: window.TRIP.from, to: window.TRIP.to } : { from: C.defaultFrom, to: C.defaultTo };
   var TAGS = ['לכולם', 'מבוגרים', 'ילדים'];
   var TAG_CLASS = { 'לכולם': 't-all', 'מבוגרים': 't-adult', 'ילדים': 't-kid' };   // colours in style.css
   function tc(t) { return TAG_CLASS[t] ? ' ' + TAG_CLASS[t] : ''; }

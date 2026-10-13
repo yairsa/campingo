@@ -65,6 +65,14 @@ const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application
   assert.ok(await page.isVisible('#calc-main'));
 
   await noHScroll('calc');
+
+  // the header and the place tab come from the trip and its crawled campsite (place.js; pinned: Achziv, campsite 23)
+  assert.strictEqual(await page.textContent('h1'), 'פארק אכזיב - אוקטובר 2026');
+  assert.ok((await page.textContent('header .sub')).includes('06/10 עד 13/10/2026'));
+  assert.ok(decodeURIComponent(await page.getAttribute('#nav-waze', 'href')).includes('q=חניון לילה גן לאומי אכזיב'));
+  await page.click('#tab-place');
+  assert.ok((await page.locator('#place-info .card h2').allInnerTexts()).includes('מה יש בחניון'));
+  await noHScroll('place');
   assert.deepStrictEqual(errors, []);
   await browser.close();
   console.log('all layout e2e tests passed');

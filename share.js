@@ -5,7 +5,9 @@
   var KEY = 'achziv-shared-offer';
   var LIVE = 'https://yairsa.github.io/achziv-camping-calculator/';
   var URL_ = /^https?:/.test(location.protocol) ? location.href.split(/[?#]/)[0] : LIVE;
-  var TEXT = 'קמפינג הקבוצה באכזיב, 06/10 עד 13/10: מחשבון עלות הלינה, רשימת ציוד, פעילויות וטיפים';
+  var P = window.PLACE || {};   // place.js: the trip's campsite and dates
+  var TEXT = 'קמפינג הקבוצה' + (P.name ? ' ב' + P.name : '') + (P.range ? ', ' + P.range.replace(/\/\d{4}$/, '') : '') +
+    ': מחשבון עלות הלינה, רשימת ציוד, פעילויות וטיפים';
   var off = window.ACHZIV_NOTOUR || /[?&]notour\b/.test(location.search);
   function $(id) { return document.getElementById(id); }
   var canShare = !!navigator.share;
