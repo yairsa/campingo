@@ -62,8 +62,16 @@ Answers, 13/10/2026 (AskUserQuestion):
 - [ ] Gate: tests green; two manual runs in a row → the second makes no commit; the task appears in Task Scheduler and its first run logs OK
 
 #### 5.3 Site: trip config from the data
-- [ ] `trip.js` + `prices.js` builds `CAMP` from `TRIP` + `CAMPSITES`; Achziv's numbers unchanged (calc tests green as is)
-  - `build.py` must inline `trip.js` + the trip's campsite record too, because `Code.gs` carries `prices.js`. A trip switch therefore needs a backend deploy (Yair's)
+
+Design (13/10/2026, refines the "Trip config" row in §3):
+- **`trip.json`** (root, committed) is the one switch: current trip `{id, campsiteId, from, to, title, dateRangeStart/End, maxConsecutiveNights, groupMinPeople, apiUrl}` + `past[]` (Achziv = `achziv-2026-10`, campsite 23). The crawler reads the same file (only `id/campsiteId/from/to`). If the crawler branch also created a smaller `trip.json`, keep this one (it is a superset).
+- **`tools/trip.py`** generates **`prices.js`** (`window.CAMP`, same shape as today, plus `tripId`, `campsiteId`, `name`) and **`trip.js`** (`window.TRIP`: the trip + its campsite record for header/place tab) from `trip.json` + `data/campsites.json`; `--check` mode joins the gates. So `calc.js`, `admin.js` and `build.py` stay unchanged. Category labels/notes come from a template in `trip.py` (today's `prices.js` wording); ages from the price-row notes when present (Achziv: "גיל 14 ומעלה"), else no age text. A category whose rate is null at that campsite is left out (toddler and escort stay, at 0). Mattress extra from `rentals`.
+- **Tests stay pinned to Achziv:** copy today's `prices.js` to `tests/fixtures/prices-achziv.js` (+ a `trip-achziv.js`). `calc.test.js` loads the fixture; `backend.test.js` re-runs the fixture + `calc.js` in its vm after loading `Code.gs` (line ~1070 asserts Achziv prices); every e2e test routes `**/prices.js*` and `**/trip.js*` to the fixtures through one helper `tests/pin-trip.js`, so their October dates keep working.
+- **Registration stays OFF for the new trip until Yair deploys the trip-aware backend** (§5.5 backend box). Without it a November save under an October name+code would overwrite the October row (the organizers' שולם reconciliation). The site sends `trip`; a backend that does not echo `trip` back means "old server", so the calculator works and saving shows "השרת עוד לא עודכן".
+- `activities.js` has `TRIP = {from:'2026-10-06', to:'2026-10-13'}` hardcoded: read it from `CAMP`. Place tab: replace the hand-written Achziv HTML with a renderer from `TRIP.campsite` (Achziv's text stays in git history). Waze/Maps by name: `https://waze.com/ul?q=<waze>&navigate=yes`, `https://www.google.com/maps/dir/?api=1&destination=<waze>`.
+
+- [ ] `trip.json` + `tools/trip.py` → `prices.js` + `trip.js`; Achziv fixtures; tests pinned (calc, backend, e2e via `tests/pin-trip.js`)
+  - `Code.gs` carries `prices.js`, so a trip switch needs `build.py` + a backend deploy (Yair's)
 - [ ] Header, title, Waze/Maps and place tab come from the campsite record; hide the activities tab when the campsite has none
 - [ ] Switch the trip to חאן בארות 12–14/11/2026; "עודכן ב-…" with the stale flag
 - [ ] Gate: all repo gates (CLAUDE.md) + `stamp.py`; 360px check
