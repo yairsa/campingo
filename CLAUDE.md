@@ -27,4 +27,4 @@ Static RTL site on GitHub Pages (`main` = live, about 1 minute after a push; no 
 - Public by design: registered family names and people per night. Never prices per family, codes, or calculator details.
 
 ## Work queue
-Plans with task lists live in `docs/`: `tips-plan.md`, `gear-plan.md`, `activities-plan.md`, `tour-plan.md` (done), `admin-plan.md` (the phone managing page `admin.html`: in progress), `campsites-plan.md` (any RTG campsite, crawler, booking helper: live 13/10/2026; §5.6 next: activities per campsite, KKL). Tick boxes in the same commit as the code.
+Plans with task lists live in `docs/`: `tips-plan.md`, `gear-plan.md`, `activities-plan.md`, `tour-plan.md` (done), `admin-plan.md` (the phone managing page `admin.html`: in progress), `campsites-plan.md` (any RTG campsite, crawler, booking helper: live 13/10/2026; §5.6 next: activities per campsite, KKL), `campingo-plan.md` (rename to CampinGo, new address, hive home page: next). Tick boxes in the same commit as the code.
