@@ -94,11 +94,16 @@ Design (13/10/2026, refines the "Trip config" row in §3):
 - [ ] Gate: all repo gates; 360px; no horizontal scroll
 
 #### 5.5 Site: booking helper (imitate RTG registration)
-- [ ] Panel: families count → a composition row per family (engine bands, engine limits); split into orders of ≤4; one deep-link button per order; the snapshot's availability and price per order
-- [ ] "מילוי מהנרשמים": prefill from registered families (names + people per night from the public summary only)
+- [x] Panel: families count → a composition row per family (engine bands, engine limits); split into orders of ≤4; one deep-link button per order; the snapshot's availability and price per order
+  - `booking.js` / `booking.css`; rows = families (max 20), clamped to `RTG.LIMITS` (at least 1 adult); the form is kept in localStorage per trip
+  - the snapshot lists only the lodging types RTG offered, so a listed type counts as available and an empty list as "no availability"; a family whose composition equals a snapshot composition shows its regular total, otherwise an estimate nights x (adults x adult + children x child) from `rates`
+- [x] "מילוי מהנרשמים": prefill from registered families (names + people per night from the public summary only)
+  - the public summary has `families`, `names`, `nights` only: the count and names are filled (names only when `names.length === families`, as cancelled rows keep a name); the composition per family is NOT public, so it stays at 2 adults and the user splits it. The message says so. No new public data.
 - [ ] Backend: `trip` field, a registrations tab per trip, Achziv rows = `achziv-2026-10`; tests; build; **Code.gs to Yair's clipboard; deploy is his**
-- [ ] e2e test for the panel (link format per order, the split at 5 families)
-- [ ] Gate: all repo gates; a deep link from the panel opens the real page with the right compositions (one headless check)
+- [x] e2e test for the panel (link format per order, the split at 5 families)
+  - `tests/booking.e2e.js`; the Achziv snapshot is injected, since `data/availability.js` only holds the current trip
+- [x] Gate: all repo gates; a deep link from the panel opens the real page with the right compositions (one headless check)
+  - live check 13/10: Beerot 12-14/11 with 2 compositions, headless Chrome with the crawler's desktop UA: the results page shows "סוג לינה 1: 2 מבוגרים ו -2 ילדים" and "סוג לינה 2: 2 מבוגרים, 3 ילדים ו -תינוק 1" (read-only)
 
 #### 5.6 Next
 - [ ] Crawl "מסלולים בסביבה" / family activities per campsite into the activities tab

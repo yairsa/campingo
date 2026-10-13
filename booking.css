@@ -1,1 +1,22 @@
-/* The RTG booking helper (docs/campsites-plan.md §5.5). */
+/* The RTG booking helper (booking.js, docs/campsites-plan.md §5.5). */
+#booking h3 { margin: 14px 0 6px; font-size: 1.05rem; }
+#booking input[type=number], #booking input[type=text] {
+  font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px; min-width: 0; box-sizing: border-box; width: 100%;
+}
+#booking input:focus-visible, #booking a:focus-visible, #booking button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.bk-top { display: grid; gap: 8px; margin: 10px 0 4px; }
+.bk-count { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.bk-count input { width: 5rem; }
+.bk-lodging { margin: 4px 0; padding-inline-start: 20px; }
+.bk-order { border-top: 1px solid var(--line); margin-top: 12px; }
+.bk-fam { background: var(--accent-soft); border-radius: 10px; padding: 10px; margin: 8px 0; }
+.bk-name { display: block; }
+.bk-name .lbl { display: block; font-weight: 600; margin-bottom: 4px; }
+.bk-nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+.bk-num { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bk-num .lbl { font-weight: 600; font-size: .95rem; }
+.bk-num .meta { font-size: .8rem; color: var(--muted); }
+.bk-fprice { margin: 8px 0 0; }
+.bk-price { font-weight: 700; }
+a.bk-open { display: block; text-align: center; text-decoration: none; margin-top: 8px; }
