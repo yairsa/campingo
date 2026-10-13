@@ -89,9 +89,14 @@ Design (13/10/2026, refines the "Trip config" row in §3):
 - [ ] Gate: all repo gates (CLAUDE.md) + `stamp.py`; 360px check
 
 #### 5.4 Site: the חניונים explorer
-- [ ] New tab: campsites by region, search, each card shows key facilities, adult/child price, the family's price for the calculator's composition and dates, Waze, the info page, and "בדיקת זמינות" (deep link)
-- [ ] e2e test `tests/campsites.e2e.js`
-- [ ] Gate: all repo gates; 360px; no horizontal scroll
+- [x] New tab: campsites by region, search, each card shows key facilities, adult/child price, the family's price for the calculator's composition and dates, Waze, the info page, and "בדיקת זמינות" (deep link)
+  - cards render from `window.CAMPSITES` at once; regions צפון/מרכז/דרום, the trip's campsite first in its region with a badge; search reuses `search.js`; "עודכן ב-dd/MM HH:mm" flagged after 3 days
+  - the estimate is nights × (adults × adult + children × child) per period at ordinary rates (no discounts, toddlers free); every non-child category counts as an adult, the three child categories as children; the campsite's own age bands are shown on the card. The family is read through the one app.js hook: `window.CampState.get()` plus a `compositionchange` event fired from `update()`
+  - the availability link = `RTG.bookingUrl` over the whole span of the calculator's periods, with the composition of the period that has the most people
+  - a "חניונים" guided tour (3 steps, `tour.js` + `tour-texts.js`, `build.py` run); six tabs needed a tighter tab row at <=420px (`explorer.css`)
+- [x] e2e test `tests/campsites.e2e.js`
+- [x] Gate: all repo gates; 360px; no horizontal scroll
+  - all green on `feat/explorer` (13/10/2026), including `tests/rtg.test.js` and `tools/trip.py --check`
 
 #### 5.5 Site: booking helper (imitate RTG registration)
 - [ ] Panel: families count → a composition row per family (engine bands, engine limits); split into orders of ≤4; one deep-link button per order; the snapshot's availability and price per order

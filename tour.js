@@ -37,6 +37,11 @@
       { key: 'details', target: '#acts-list .arow' },
       { key: 'add', target: '#acts-add' }
     ] },
+    sites: { tab: 'sites', steps: [
+      { key: 'intro', target: '#panel-sites .card h2' },
+      { key: 'search', target: '#sites-q' },
+      { key: 'card', target: '#sites-list .site-avail' }
+    ] },
     tips: { tab: 'tips', ready: '#tips-tools', steps: [
       { key: 'intro', target: '#panel-tips .card h2' },
       { key: 'search', target: '#tips-q' },

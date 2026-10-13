@@ -1,1 +1,24 @@
 /* The campsites explorer (docs/campsites-plan.md §5.4). */
+#panel-sites .region h3 { margin: 20px 0 8px; font-size: 18px; }
+#panel-sites .region h3 small { color: var(--muted); font-weight: 400; }
+#panel-sites .site { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+#panel-sites .site.trip { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+#panel-sites .site h4 { margin: 0 0 6px; font-size: 16px; }
+#panel-sites .site-badge { display: inline-block; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 1px 8px; font-size: 12px; font-weight: 600; vertical-align: middle; }
+#panel-sites .site p { margin: 4px 0; }
+#panel-sites .site-facs { color: var(--muted); font-size: 14px; }
+#panel-sites .site-family small { display: block; color: var(--muted); }
+#panel-sites .site-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+#panel-sites .site-links a { width: auto; flex: 1 1 auto; text-align: center; text-decoration: none; }
+#panel-sites .stale { color: var(--warn-text); background: var(--warn-bg); padding: 2px 8px; border-radius: 6px; }
+#panel-sites #sites-family { margin: 8px 0; }
+#panel-sites .field { margin-bottom: 10px; }
+#panel-sites .field input {
+  display: block; width: 100%; font: inherit; color: var(--text); background: var(--card);
+  border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; margin-top: 4px;
+}
+/* six tabs, "מחשבון לינה" first, still fit at 360px (style.css fitted five) */
+@media (max-width: 420px) {
+  .tabs { padding-inline: 6px; gap: 1px; }
+  .tabs button { padding: 10px 3px; font-size: 14px; }
+}
