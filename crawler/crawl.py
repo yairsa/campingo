@@ -46,6 +46,8 @@ DEFAULT_COMPS = [(2, 2, 0), (2, 3, 0), (2, 3, 1)]
 INFO_MAX_AGE_HOURS = 20
 # the site flags data older than 3 days, so an unchanged crawl still commits a fresh timestamp this often
 HEARTBEAT_HOURS = 36
+# commits only on the live branch; on any other checkout the run logs an error instead
+BRANCH = "main"
 MAX_PAGES = 25
 
 
@@ -640,7 +642,11 @@ def heartbeat_due():
 
 
 def commit_and_push():
-    """Commit + push data/ only on a real change. Returns (changed, error)."""
+    """Commit + push data/ only on a real change, and only from BRANCH. Returns (changed, error).
+
+    A run with nothing new puts HEAD's copy of data/ back, so the scheduled task never leaves the tree dirty.
+    """
+    branch = git("rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
     git("add", "data")
     changed = data_changed_beyond_timestamps()
     reason = "data changed: " + ", ".join(Path(c).name for c in changed) if changed else None
@@ -648,12 +654,16 @@ def commit_and_push():
         reason = "timestamp refresh"
         changed = ["timestamp"]
     if not changed:
-        git("reset", "-q", "--", "data")  # leave the timestamp-only edit unstaged
+        names = git("diff", "--cached", "--name-only", "--", "data").stdout.split()
+        git("reset", "-q", "--", "data")
+        if names:  # timestamp-only edits
+            git("checkout", "-q", "--", *names)
         return False, None
-    msg = (f"crawler: {reason}\n\n"
-           "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\n"
-           "Claude-Session: https://claude.ai/code/session_01TPPorXR75wqzxrPG2RU7yB")
-    c = git("commit", "-q", "-m", msg, "--", "data")
+    if branch != BRANCH:
+        git("reset", "-q", "--", "data")
+        return False, f"not committed: the checkout is on '{branch}', not '{BRANCH}' (data/ left modified)"
+    msg = f"crawler: {reason}"
+    c =git("commit", "-q", "-m", msg, "--", "data")
     if c.returncode != 0:
         return True, "git commit failed: " + (c.stderr or c.stdout).strip()
     p = git("push")

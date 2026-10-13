@@ -24,7 +24,8 @@ python crawler/test_crawl.py                                      # offline test
 the trip in `trip.json` (skipped once the trip has ended), writes `data/`, and commits + pushes `data/` only when something
 changed other than `checkedAt` timestamps. One exception: when the committed timestamp is older than 36h it commits a
 refresh anyway, so the site's "data older than 3 days" flag only fires when the crawler really stopped.
-A timestamp-only run leaves the working files modified but uncommitted; that is expected.
+A timestamp-only run puts HEAD's copy of `data/` back, so the scheduled task never leaves the tree dirty.
+It commits only when the checkout is on `main`; on any other branch the run logs an error and leaves `data/` modified.
 
 A run is about 23 pages (2 catalog + 18 info + 3 availability), sequential, 3-5 s apart, never more than 25.
 Each page gets a fresh browser context: reusing one made Cloudflare answer 403 from the second booking page on.

@@ -177,7 +177,7 @@ class DiffLogicTest(unittest.TestCase):
         self.repo = Path(self.tmp.name)
         self.old_root = crawl.ROOT
         crawl.ROOT = self.repo
-        self.git("init", "-q")
+        self.git("init", "-q", "-b", "main")
         self.git("config", "user.email", "t@example.com")
         self.git("config", "user.name", "t")
         (self.repo / "data").mkdir()
@@ -222,6 +222,25 @@ class DiffLogicTest(unittest.TestCase):
         finally:
             crawl.HEARTBEAT_HOURS = old
         self.assertEqual((changed, err), (False, None))
+        log = subprocess.run(["git", "-C", str(self.repo), "log", "--oneline"], capture_output=True, text=True).stdout
+        self.assertEqual(len(log.strip().splitlines()), 1)
+        status = subprocess.run(["git", "-C", str(self.repo), "status", "--porcelain"], capture_output=True, text=True).stdout
+        self.assertEqual(status, "", "a timestamp-only run must leave the tree clean")
+
+    def test_real_change_commits(self):
+        self.write({"checkedAt": "2026-10-14T05:30:00+03:00", "campsites": [{"id": 1, "checkedAt": "y", "rates": {"adult": 66}}]})
+        changed, err = crawl.commit_and_push()
+        self.assertTrue(changed)
+        self.assertIn("git push failed", err)  # the temp repo has no remote; the commit itself landed
+        log = subprocess.run(["git", "-C", str(self.repo), "log", "--format=%s"], capture_output=True, text=True).stdout
+        self.assertEqual(log.splitlines()[0], "crawler: data changed: campsites.json")
+
+    def test_other_branch_is_not_committed(self):
+        self.git("checkout", "-q", "-b", "feat/x")
+        self.write({"checkedAt": "2026-10-14T05:30:00+03:00", "campsites": [{"id": 1, "checkedAt": "y", "rates": {"adult": 66}}]})
+        changed, err = crawl.commit_and_push()
+        self.assertFalse(changed)
+        self.assertIn("feat/x", err)
         log = subprocess.run(["git", "-C", str(self.repo), "log", "--oneline"], capture_output=True, text=True).stdout
         self.assertEqual(len(log.strip().splitlines()), 1)
 
