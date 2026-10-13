@@ -131,8 +131,8 @@ const errors = [];
   await page.waitForTimeout(2500);
   assert.strictEqual(await page.evaluate(() => localStorage.getItem('achziv-tour-texts')), null, 'cached a bad_request');
   // the permanent note, on every tab (the tab tours marked seen, so they stay out of the way here)
-  await page.evaluate(() => localStorage.setItem('achziv-tour-v1', JSON.stringify({ welcome: 1, gear: 1, acts: 1, tips: 1 })));
-  for (const t of ['calc', 'place', 'gear', 'acts', 'tips']) {
+  await page.evaluate(() => localStorage.setItem('achziv-tour-v1', JSON.stringify({ welcome: 1, gear: 1, acts: 1, sites: 1, tips: 1 })));
+  for (const t of ['calc', 'place', 'gear', 'acts', 'sites', 'tips']) {
     await page.click('#tab-' + t);
     assert.ok(await page.isVisible('.site-note') && (await page.innerText('.site-note')).includes('אינו רשמי'), 'no note on ' + t);
   }
@@ -144,13 +144,13 @@ const errors = [];
   assert.ok(!(await open(page)));
   assert.strictEqual((await seen(page)).welcome, 1);
   const sizes = {};
-  for (const t of ['gear', 'acts', 'tips']) {
+  for (const t of ['gear', 'acts', 'sites', 'tips']) {
     await page.click('#tab-' + t);
     sizes[t] = await walk(page, t);
     await page.click('#tab-calc'); await page.click('#tab-' + t); await page.waitForTimeout(500);
     assert.ok(!(await open(page)), 'the ' + t + ' tour ran twice');
   }
-  assert.deepStrictEqual(sizes, { gear: 5, acts: 4, tips: 3 });
+  assert.deepStrictEqual(sizes, { gear: 5, acts: 4, sites: 3, tips: 3 });
   await page.click('#tab-place'); await page.waitForTimeout(400);
   assert.ok(!(await open(page)), 'a tour on the place tab');
 

@@ -7,7 +7,7 @@
 // Text format: plain text. A blank line starts a new paragraph, **...** is bold. No HTML: tour.js escapes it.
 
 // The name each tour carries in the sheet's סיור column.
-var TOUR_NAMES_ = { welcome: 'פתיחה', gear: 'ציוד', acts: 'פעילויות', tips: 'טיפים' };
+var TOUR_NAMES_ = { welcome: 'פתיחה', gear: 'ציוד', acts: 'פעילויות', sites: 'חניונים', tips: 'טיפים' };
 
 // Built-in texts that were replaced here after a sheet was created with them. A sheet cell still holding one was
 // never edited, so the script moves it to the current text. Key: tour/key.
@@ -61,6 +61,13 @@ var TOUR_TEXTS_ = [
     text: 'לחיצה על פעילות פותחת את הפרטים. משם מצטרפים, עם השם והקוד של ההרשמה.' },
   { tour: 'acts', key: 'add', title: 'הוספת פעילות',
     text: 'משפחה רשומה יכולה להוסיף פעילות משלה.' },
+
+  { tour: 'sites', key: 'intro', title: 'חניונים',
+    text: 'כל חניוני הלילה של רשות הטבע והגנים, לפי אזור, עם מחיר ללילה והערכה למשפחה שלכם לפי ההרכב והתאריכים במחשבון.' },
+  { tour: 'sites', key: 'search', title: 'חיפוש',
+    text: 'מחפשים לפי שם, אזור או מתקן, למשל מקלחות.' },
+  { tour: 'sites', key: 'card', title: 'בדיקת זמינות',
+    text: 'הכפתור פותח את דף ההזמנה של רשות הטבע והגנים עם ההרכב והתאריכים שלכם. שם רואים זמינות ומחיר מדויק, והוא המילה האחרונה.' },
 
   { tour: 'tips', key: 'intro', title: 'טיפים מהקבוצה',
     text: 'טיפים שחברי הקבוצה כתבו: ציוד, לינה, אוכל, ילדים ועוד.' },

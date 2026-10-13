@@ -249,7 +249,12 @@
     document.getElementById('result').innerHTML = out;
   }
 
-  function update() { renderResult(); save(); }
+  function update() {
+    renderResult(); save();
+    document.dispatchEvent(new CustomEvent('compositionchange'));   // explorer.js reprices its cards
+  }
+  // read-only view of the family composition and dates, for explorer.js
+  window.CampState = { get: function () { return state; } };
 
   // ---------- price table ----------
   function renderPriceTable() {
