@@ -3,7 +3,7 @@
 // carries no personal data. Plan: docs/tour-plan.md §4.3.
 (function () {
   var KEY = 'achziv-shared-offer';
-  var LIVE = 'https://yairsa.github.io/achziv-camping-calculator/';
+  var LIVE = 'https://yairsa.github.io/campingo/';
   var URL_ = /^https?:/.test(location.protocol) ? location.href.split(/[?#]/)[0] : LIVE;
   var P = window.PLACE || {};   // place.js: the trip's campsite and dates
   var TEXT = 'קמפינג הקבוצה' + (P.name ? ' ב' + P.name : '') + (P.range ? ', ' + P.range.replace(/\/\d{4}$/, '') : '') +

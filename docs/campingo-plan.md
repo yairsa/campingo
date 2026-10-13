@@ -1,8 +1,8 @@
 # CampinGo — plan
 
-> **Open questions for Yair** (hand-kept): none open. His 13/10/2026 answers are in §1.
+> **Open questions for Yair** (hand-kept): none open (§4.4's go-ahead answered 14/10/2026). His 13/10/2026 answers are in §1.
 
-**Status:** plan written 13/10/2026; nothing built yet. Next: the first unticked box in §4.
+**Status:** §4.2 and §4.3 built on branch `feat/campingo` (worktree `../wt-campingo`), all gates green, 14/10/2026. Next: §4.1 + §4.4 together (the rename lands with the merge).
 
 ## 1. The brief (Yair, 13/10/2026)
 
@@ -39,21 +39,35 @@ Answers, 13/10/2026 (AskUserQuestion):
 #### 4.1 Address: rename + forwarding
 - [ ] `gh repo rename campingo` (in the main checkout); confirm `git remote -v` points at `yairsa/campingo`; Pages serves `https://yairsa.github.io/campingo/`
 - [ ] Forwarding repo `yairsa/achziv-camping-calculator` (new, public, Pages on `main`): `index.html` + `admin.html` + `404.html` that replace `location` with the same path, query and hash under `/campingo/` (meta refresh as the no-JS fallback)
-- [ ] `share.js` `LIVE`, `tests/tour.e2e.js`, `README.md`, `CLAUDE.md`, `backend/SETUP.md` point at the new address
+  - The page's source is `forwarder/index.html` in this repo (written 14/10/2026); publish it as all three files.
+- [x] `share.js` `LIVE`, `tests/tour.e2e.js`, `README.md`, `CLAUDE.md`, `backend/SETUP.md` point at the new address (on the branch)
 - [ ] Gate: old link `…/achziv-camping-calculator/#gear` lands on `…/campingo/#gear` (headless, live); a crawler run still pushes (`git push --dry-run` from the main checkout)
 
 #### 4.2 Home page
-- [ ] Home view: `CampinGo` title, designed header (colors from `style.css` tokens, light + dark), the trip card from `TRIP` + `CAMPSITES`, the "no planned camping" state
-- [ ] Hive: trip hexagons מחשבון · מחירון · רשימת ציוד · על המקום · פעילויות; general hexagons חניונים · טיפים לקמפינג; icons; keyboard + screen-reader labels; 360px fits without horizontal scroll
-- [ ] Navigation: the tab row goes; a "→ ראשי" bar on each view; hashes and the back button as in §3
-- [ ] Gate: all repo gates + `stamp.py`; 360px and desktop screenshots, light and dark
+- [x] Home view: `CampinGo` title, designed header (colors from `style.css` tokens, light + dark), the trip card from `TRIP` + `CAMPSITES`, the "no planned camping" state
+  - `#home` in `index.html`; the card is filled by `place.js` (name, dates, nights, "בעוד N ימים" / "מחר!" / "אנחנו שם עכשיו!"). Waze and Maps moved into the card.
+  - No trip = today after `TRIP.to`: `body.no-trip`, the trip hive and the card's details hidden. `window.CAMPINGO_TODAY` (ISO) overrides today; `tests/pin-trip.js` sets 2026-10-01.
+  - New tokens `--hero-*`, `--sun`, `--hex*` in all three token blocks. The brand bar (logo, share, ?) is on every view; on the home page its name is hidden (the hero says it).
+- [x] Hive: trip hexagons מחשבון · מחירון · רשימת ציוד · על המקום · פעילויות; general hexagons חניונים · טיפים לקמפינג; icons; keyboard + screen-reader labels; 360px fits without horizontal scroll
+  - The hexagons keep the old ids (`#tab-calc` … plus `#tab-prices`): gear.js, tips.js and activities.js start on their click/focus. `clip-path` is on the button, so the overlapping rows' corners do not steal clicks; the focus ring is the hexagon's edge (an outline would be clipped).
+- [x] Navigation: the tab row goes; a "→ ראשי" bar on each view; hashes and the back button as in §3
+  - Router in `app.js` (`show`/`go`/`home`): each step is a history entry carrying its depth (`state.d`), so → ראשי is `history.go(-d)`. A link straight to a view (`#gear`) is opened over a home entry, so back stays on the site. `window.CampNav` for tour.js. `tabshown` fires on every panel change, `home` included.
+  - The old tab-fitting CSS (`style.css` 520px block, `explorer.css` 420px block) removed: it squeezed the new bar.
+- [x] Gate: all repo gates + `stamp.py`; 360px and desktop screenshots, light and dark (checked 14/10/2026)
 
 #### 4.3 Tests and tours
-- [ ] `tests/layout.e2e.js` rewritten for home + hive (every button opens its view, back returns home, old hashes open their view, no-trip state with a shifted clock)
-- [ ] `tour.js` / `tour-texts.js`: welcome tour on the home hive; per-view tours unchanged; retired texts into `TOUR_RETIRED_`; `build.py` (Code.gs carries tour-texts: clipboard to Yair, his deploy)
-- [ ] Every other e2e that clicks `#tab-*` goes through the home buttons (or a helper)
-- [ ] Gate: all repo gates green
+- [x] `tests/layout.e2e.js` rewritten for home + hive (every button opens its view, back returns home, old hashes open their view, no-trip state with a shifted clock)
+- [x] `tour.js` / `tour-texts.js`: welcome tour on the home hive; per-view tours unchanged; retired texts into `TOUR_RETIRED_`; `build.py` (Code.gs carries tour-texts: clipboard to Yair, his deploy)
+  - Welcome (home): hello · help · the trip hive · מחירון · כללי (new step `general`) · share. The calculator's four steps became their own tour `calc` (sheet name מחשבון); `TOUR_MOVED_` + `tourSync_` move the sheet's rows, with any text Yair wrote, to the new tour.
+  - A view's tour runs on its first opening; the welcome waits for the home page (a link to `#tips` shows the tips tour first). A visitor who saw the old welcome (`welcome` without `hive` in `achziv-tour-v1`) counts as having seen the calc tour.
+  - Code.gs changed; it goes on Yair's clipboard at landing (§4.4), so his deploy matches the live site.
+- [x] Every other e2e that clicks `#tab-*` goes through the home buttons (or a helper)
+  - `tests/open-view.js`: → ראשי if on a view, then the hexagon.
+- [x] Gate: all repo gates green (16/16, 14/10/2026)
 
 #### 4.4 Land
+<Yair: Land it> The design is built and green on `feat/campingo` (screenshots sent 14/10/2026). Landing renames the repo, makes the old address forward, and puts the new home page live for the families. Land it, or change something first?
+  - **Answered 14/10/2026 (AskUserQuestion): "Land it".**
 - [ ] Merge `feat/campingo` to `main` together with §4.1's rename; live check on the new address (home, a button, an old link forwarding)
+  - Then `Code.gs` on Yair's clipboard (the calc tour); his deploy.
 - [ ] Gate: live check passes; `docs/campsites-plan.md` and `CLAUDE.md` name the new address

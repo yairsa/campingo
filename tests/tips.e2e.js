@@ -2,6 +2,7 @@
 // Node's vm (the Google URL is mocked, so nothing reaches the live sheet). Submit → approve in the "sheet" →
 // visible on the site, for a tip and for a comment; Google's dropped replies; the old live script.
 // Needs playwright-core (PLAYWRIGHT_CORE=<path>, default: the website repo's copy) and installed Chrome (CHROME=<path>).
+const openView = require('./open-view');
 const assert = require('assert'), fs = require('fs'), vm = require('vm'), path = require('path');
 const { chromium } = require(process.env.PLAYWRIGHT_CORE || 'C:/YairSahar_Business/ParentingUpClose_Website/node_modules/playwright-core');
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
@@ -57,7 +58,7 @@ const approve = (rows, id) => { rows.find(r => +r.id === id).status = ST.approve
   await page.goto(url);
   await page.waitForFunction(() => document.querySelector('#tip-1'), null, { timeout: 5000 });
   assert.ok(await page.isHidden('#panel-tips'), 'prefetch should not switch tabs');
-  await page.click('#tab-tips');
+  await openView(page, 'tips');
   assert.ok(await page.isVisible('#tip-1'));
   assert.strictEqual(await text('#tips-count'), '2 טיפים.');
   assert.strictEqual(await page.locator('#tip-1 .clist li:visible').count(), 3);

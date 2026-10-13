@@ -7,7 +7,7 @@
 // Text format: plain text. A blank line starts a new paragraph, **...** is bold. No HTML: tour.js escapes it.
 
 // The name each tour carries in the sheet's סיור column.
-var TOUR_NAMES_ = { welcome: 'פתיחה', gear: 'ציוד', acts: 'פעילויות', sites: 'חניונים', tips: 'טיפים' };
+var TOUR_NAMES_ = { welcome: 'פתיחה', calc: 'מחשבון', gear: 'ציוד', acts: 'פעילויות', sites: 'חניונים', tips: 'טיפים' };
 
 // Built-in texts that were replaced here after a sheet was created with them. A sheet cell still holding one was
 // never edited, so the script moves it to the current text. Key: tour/key.
@@ -15,8 +15,15 @@ var TOUR_RETIRED_ = {
   'welcome/share': ['מכירים עוד משפחות מהקבוצה? שלחו להן את האתר. הסיור הזה חוזר בכל זמן בכפתור ?.'],
   // the trip moved on from Achziv (campsites-plan §5.3): the welcome no longer names a place
   'welcome/hello': ['האתר עוזר לקבוצה להתארגן לקמפינג באכזיב: חישוב עלות הלינה, מידע על המקום, רשימת ציוד, פעילויות וטיפים. סיור קצר, פחות מדקה.\n\n**לידיעתכם:** זה אתר לא רשמי ומייעץ בלבד, שבנה אחד מחברי הקבוצה בשביל הקבוצה. הוא לא קשור לרשות הטבע והגנים או לחניון, ולא מתחייב לדבר. המחיר הקובע הוא המחיר בקופה. ט.ל.ח. השתמשו בו אם הוא עוזר לכם.\n\n**פרטיות:** לא נאספים פרטים אישיים (לא טלפון, לא מייל ולא תעודת זהות). רשימת הציוד נשמרת רק בדפדפן שלכם. הרשמה שומרת רק את השם שבחרתם, מספר הלנים והתאריכים, כדי לספור כמה נהיה.'],
-  'acts/views': ['פעילויות שמשפחות בקבוצה מתכננות. רואים אותן ברשימה לפי ימים, או בלוח שבועי.']
+  'acts/views': ['פעילויות שמשפחות בקבוצה מתכננות. רואים אותן ברשימה לפי ימים, או בלוח שבועי.'],
+  // the tab row became the home page's hive (docs/campingo-plan.md §4.3)
+  'welcome/tabs': ['כאן עוברים בין החלקים: המחשבון, מידע על המקום, רשימת ציוד, פעילויות וטיפים מהקבוצה.']
 };
+
+// Steps that moved to another tour: the sheet's row (and any text Yair wrote in it) moves with them. new: old.
+// The calculator's steps left the welcome tour when the welcome moved to the home page (campingo-plan §4.3).
+var TOUR_MOVED_ = { 'calc/who': 'welcome/who', 'calc/when': 'welcome/when', 'calc/cost': 'welcome/cost',
+  'calc/register': 'welcome/register' };
 
 var TOUR_TEXTS_ = [
   { tour: 'welcome', key: 'hello', title: 'ברוכים הבאים!',
@@ -30,19 +37,23 @@ var TOUR_TEXTS_ = [
   { tour: 'welcome', key: 'help', title: 'הסיור תמיד כאן',
     text: 'אפשר לחזור לסיור הזה בכל זמן, בכפתור ?. בכל חלק של האתר הוא מציג סיור קצר על אותו חלק.' },
   { tour: 'welcome', key: 'tabs', title: 'חלקי האתר',
-    text: 'כאן עוברים בין החלקים: המחשבון, מידע על המקום, רשימת ציוד, פעילויות וטיפים מהקבוצה.' },
+    text: 'כל משושה פותח חלק של האתר לקמפינג הבא: המחשבון, המחירון, רשימת הציוד, מידע על המקום ופעילויות. ' +
+      'מכל חלק, "→ ראשי" (או כפתור החזרה של הטלפון) מחזיר לכאן.' },
   { tour: 'welcome', key: 'prices', title: 'מחירון',
     text: 'המחירון המלא, מאתר רשות הטבע והגנים.' },
-  { tour: 'welcome', key: 'who', title: '1. מי מגיע?',
-    text: 'סמנו כמה מבוגרים וילדים מגיעים. יש לכם הנחה (סטודנטים, מילואים, אזרחים ותיקים ועוד)? פתחו את "יש לכם הנחה" וספרו אותם שם.' },
-  { tour: 'welcome', key: 'when', title: '2. מתי?',
-    text: 'בוחרים תאריך הגעה ותאריך עזיבה. מגיעים רק לחלק מהזמן, או בהפסקות? "הוספת תקופה" מפצלת את השהייה.' },
-  { tour: 'welcome', key: 'cost', title: '3. כמה זה עולה',
-    text: 'העלות מתעדכנת מיד בזמן שממלאים: מחיר רגיל ומחיר עם הנחה קבוצתית.' },
-  { tour: 'welcome', key: 'register', title: '4. שמירת ההרשמה (לא חובה)',
-    text: 'רוצים שהקבוצה תדע שאתם מגיעים? שמרו את מה שמילאתם, עם שם משפחה וקוד שתבחרו. עם אותו שם וקוד אפשר לעדכן, לבטל ולהצטרף לפעילויות.' },
+  { tour: 'welcome', key: 'general', title: 'כללי',
+    text: 'כל חניוני הלילה של רשות הטבע והגנים, וטיפים לקמפינג שחברי הקבוצה כתבו.' },
   { tour: 'welcome', key: 'share', title: 'שיתוף האתר',
     text: 'מכירים עוד משפחות מהקבוצה? שלחו להן את האתר.' },
+
+  { tour: 'calc', key: 'who', title: '1. מי מגיע?',
+    text: 'סמנו כמה מבוגרים וילדים מגיעים. יש לכם הנחה (סטודנטים, מילואים, אזרחים ותיקים ועוד)? פתחו את "יש לכם הנחה" וספרו אותם שם.' },
+  { tour: 'calc', key: 'when', title: '2. מתי?',
+    text: 'בוחרים תאריך הגעה ותאריך עזיבה. מגיעים רק לחלק מהזמן, או בהפסקות? "הוספת תקופה" מפצלת את השהייה.' },
+  { tour: 'calc', key: 'cost', title: '3. כמה זה עולה',
+    text: 'העלות מתעדכנת מיד בזמן שממלאים: מחיר רגיל ומחיר עם הנחה קבוצתית.' },
+  { tour: 'calc', key: 'register', title: '4. שמירת ההרשמה (לא חובה)',
+    text: 'רוצים שהקבוצה תדע שאתם מגיעים? שמרו את מה שמילאתם, עם שם משפחה וקוד שתבחרו. עם אותו שם וקוד אפשר לעדכן, לבטל ולהצטרף לפעילויות.' },
 
   { tour: 'gear', key: 'views', title: 'רשימת ציוד',
     text: '"בחירת פריטים" מציגה את כל מה שכדאי להביא. "הרשימה שלי" מציגה את מה שבחרתם.' },

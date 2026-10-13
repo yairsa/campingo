@@ -2,6 +2,7 @@
 // Node's vm (the Google URL is mocked, so nothing reaches the live sheet). Add → join → past the number of places (advisory) → leave → edit → cancel, הרשימה שלי,
 // the calendar, the filters, a dropped reply, a wrong code, the cached copy and the old live script.
 // Needs playwright-core (PLAYWRIGHT_CORE=<path>, default: the website repo's copy) and installed Chrome (CHROME=<path>).
+const openView = require('./open-view');
 const assert = require('assert'), fs = require('fs'), vm = require('vm'), path = require('path'), crypto = require('crypto');
 const { chromium } = require(process.env.PLAYWRIGHT_CORE || 'C:/YairSahar_Business/ParentingUpClose_Website/node_modules/playwright-core');
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
@@ -65,13 +66,12 @@ let oldBackend = false, dropNext = 0, delay = 0, calls = [];
   };
   const setTime = async (key, d, h, m) => { await page.selectOption('#af-' + key + '-day', d); await page.selectOption('#af-' + key + '-h', h); await page.selectOption('#af-' + key + '-m', m); };
 
-  // ---- prefetched in the background; the tab bar still fits at 360px ----
+  // ---- prefetched in the background ----
   await page.goto(url);
   await page.waitForTimeout(3000);
   assert.ok(calls.includes('activities'), 'activities not prefetched');
   assert.ok(await page.isHidden('#panel-acts'), 'prefetch should not switch tabs');
-  { const tw = await page.evaluate(() => { const t = document.querySelector('.tabs'); return [t.scrollWidth, t.clientWidth]; }); assert.ok(tw[0] <= tw[1], 'the tab bar overflows at 360px: ' + tw); }
-  await page.click('#tab-acts');
+  await openView(page, 'acts');
   assert.strictEqual(await text('#acts-count'), 'עוד אין פעילויות. אפשר להוסיף את הראשונה.');
   assert.ok(await page.isVisible('#acts-add'));
   assert.strictEqual(await page.locator('#acts-days .chip').count(), 9);        // all + 06/10..13/10
@@ -133,7 +133,7 @@ let oldBackend = false, dropNext = 0, delay = 0, calls = [];
   // ---- another family: the places are taken and it still joins (advisory, activities-plan §6); no edit buttons ----
   await page.evaluate(() => { localStorage.setItem('achziv-registered', 'Levi'); });
   await page.reload();
-  await page.click('#tab-acts');
+  await openView(page, 'acts');
   await page.click('.arow[data-id="1"]');
   assert.ok(!(await text('#act-dlg-body')).includes('מלאה'));
   assert.ok(await page.isHidden('#act-edit'));
@@ -153,7 +153,7 @@ let oldBackend = false, dropNext = 0, delay = 0, calls = [];
   await page.click('#act-dlg-close');
   await page.evaluate(() => { localStorage.setItem('achziv-registered', 'משפחת כהן'); });
   await page.reload();
-  await page.click('#tab-acts');
+  await openView(page, 'acts');
   await page.click('.arow[data-id="1"]');
   await page.fill('#act-pin', '1234');
   await page.click('#act-leave');
@@ -266,7 +266,7 @@ let oldBackend = false, dropNext = 0, delay = 0, calls = [];
     ctx.route({ action: 'saveActivity', user: 'Levi', pin: '5555', clientId: 'act-page-000' + i,
       activity: { topic: 'פעילות ' + i, start: d + 'T16:00', end: d + 'T17:00', tag: 'לכולם' } }, reg, null, as);
   await page.reload();
-  await page.click('#tab-acts');
+  await openView(page, 'acts');
   await page.click('#acts-view-cal');
   const heads = async () => (await page.locator('.calhead span').allInnerTexts()).slice(1);
   assert.deepStrictEqual(await heads(), ['ג׳ 06/10', 'ד׳ 07/10', 'ו׳ 09/10']);
@@ -282,25 +282,25 @@ let oldBackend = false, dropNext = 0, delay = 0, calls = [];
   await page.setViewportSize({ width: 360, height: 780 });
   acts.filter(a => a.clientId.startsWith('act-page-')).forEach(a => { a.status = 'בוטל'; });
   await page.reload();                                                       // this browser's copy follows
-  await page.click('#tab-acts');
+  await openView(page, 'acts');
   await page.waitForFunction(() => document.querySelectorAll('.arow').length === 1, null, { timeout: 15000 });
 
   // ---- slow server: the cached copy at once ----
   delay = 3000;
   const t0 = Date.now();
   await page.reload();
-  await page.click('#tab-acts');
+  await openView(page, 'acts');
   assert.strictEqual(await page.locator('.arow').count(), 1);
   assert.ok(Date.now() - t0 < 2500, 'the cached list waited for the server');
   delay = 0;
   await page.waitForTimeout(3500);
 
   // ---- loaded under "ההרשמה שלי" in this visit: the name and code are filled in ----
-  await page.click('#tab-calc');
+  await openView(page, 'calc');
   await page.fill('#reg-user', 'Levi'); await page.fill('#reg-pin', '5555');
   await page.click('#reg-load');
   await page.waitForFunction(() => /נטענה/.test(document.getElementById('reg-msg').textContent), null, { timeout: 15000 });
-  await page.click('#tab-acts');
+  await openView(page, 'acts');
   await page.click('.arow');
   assert.strictEqual(await page.inputValue('#act-user'), 'Levi');
   assert.strictEqual(await page.inputValue('#act-pin'), '5555');
@@ -313,7 +313,7 @@ let oldBackend = false, dropNext = 0, delay = 0, calls = [];
   // a device that knows no family
   await page.evaluate(() => localStorage.removeItem('achziv-registered'));
   await page.reload();
-  await page.click('#tab-acts');
+  await openView(page, 'acts');
   await page.click('#acts-view-mine');
   assert.ok((await text('#acts-count')).startsWith('כדי לראות כאן את הפעילויות שלכם'), await text('#acts-count'));
 
@@ -338,7 +338,7 @@ let oldBackend = false, dropNext = 0, delay = 0, calls = [];
   oldBackend = true;
   await page.evaluate(() => localStorage.clear());
   await page.goto(url);                                                      // off the preview link
-  await page.click('#tab-acts');
+  await openView(page, 'acts');
   await page.waitForFunction(() => /בקרוב/.test(document.getElementById('acts-state').textContent), null, { timeout: 5000 });
   assert.ok(await page.isHidden('#acts-add'));
   await noHScroll('old backend');

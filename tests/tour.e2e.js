@@ -1,10 +1,11 @@
 // Run: node tests/tour.e2e.js — the guided tours and the share button in headless Chrome at 360px, against
 // backend/Code.gs running in Node's vm (the Google URL is mocked, so nothing reaches the live sheet).
-// The welcome tour on the first visit, each tab's tour once on first opening, every step's target on screen and
+// The welcome tour on the home page, each view's tour once on first opening, every step's target on screen and
 // neither under a fixed bar nor under its own bubble, skip remembered, ? replays; the share menu, and the share
 // modal once after the first registration only;
 // texts edited in the sheet's הדרכה tab. Plan: docs/tour-plan.md §4.4, §5.3.
 // Needs playwright-core (PLAYWRIGHT_CORE=<path>, default: the website repo's copy) and installed Chrome (CHROME=<path>).
+const openView = require('./open-view');
 const assert = require('assert'), fs = require('fs'), vm = require('vm'), path = require('path'), crypto = require('crypto');
 const { chromium } = require(process.env.PLAYWRIGHT_CORE || 'C:/YairSahar_Business/ParentingUpClose_Website/node_modules/playwright-core');
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
@@ -105,7 +106,7 @@ const errors = [];
     return n;
   }
 
-  // ---- the first visit: the welcome tour, 9 steps, the disclaimer in step 1 ----
+  // ---- the first visit: the welcome tour on the home page, 6 steps, the disclaimer in step 1 ----
   let page = await visitor('none');
   await page.goto(url);
   await waitTour(page);
@@ -115,68 +116,79 @@ const errors = [];
   // back and forth, then the whole walk
   await page.click('#tour-next'); await settled(page); await page.click('#tour-prev'); await settled(page);
   assert.ok((await page.innerText('#tour-count')).startsWith('1 '));
-  // the order: the ? button, the tabs, the price list, then the form
+  // the order: the ? button, the trip's hive, the price list's hexagon
   const order = [];
   for (let i = 0; i < 4; i++) {
     order.push(await page.evaluate(() => { const e = window.Tour.current(); return e ? e.id || e.className : null; }));
     await page.click('#tour-next'); await settled(page);
   }
-  assert.deepStrictEqual(order, [null, 'tour-help', 'tabs', 'open-prices'], JSON.stringify(order));
+  assert.deepStrictEqual(order, [null, 'tour-help', 'hive', 'tab-prices'], JSON.stringify(order));
   for (let i = 0; i < 4; i++) { await page.click('#tour-prev'); await settled(page); }
-  assert.strictEqual(await walk(page, 'welcome'), 9);
-  assert.strictEqual((await seen(page)).welcome, 1);
+  assert.strictEqual(await walk(page, 'welcome'), 6);
+  assert.deepStrictEqual(await seen(page), { welcome: 1, hive: 1 });
   await page.reload(); await page.waitForTimeout(800);
   assert.ok(!(await open(page)), 'the welcome tour ran twice');
   // the old script answers `tour` with bad_request: nothing cached, the built-in text stays
   await page.waitForTimeout(2500);
   assert.strictEqual(await page.evaluate(() => localStorage.getItem('achziv-tour-texts')), null, 'cached a bad_request');
   // the permanent note, on every tab (the tab tours marked seen, so they stay out of the way here)
-  await page.evaluate(() => localStorage.setItem('achziv-tour-v1', JSON.stringify({ welcome: 1, gear: 1, acts: 1, sites: 1, tips: 1 })));
+  await page.evaluate(() => localStorage.setItem('achziv-tour-v1', JSON.stringify({ welcome: 1, hive: 1, calc: 1, gear: 1, acts: 1, sites: 1, tips: 1 })));
   for (const t of ['calc', 'place', 'gear', 'acts', 'sites', 'tips']) {
-    await page.click('#tab-' + t);
+    await openView(page, t);
     assert.ok(await page.isVisible('.site-note') && (await page.innerText('.site-note')).includes('אינו רשמי'), 'no note on ' + t);
   }
 
-  // ---- the tab tours: once each, on first opening ----
+  // ---- the view tours: once each, on first opening ----
   page = await visitor('none');
   await page.goto(url + '?demo');                              // ?demo: example activities, so the row step shows
   await waitTour(page); await page.keyboard.press('Escape');     // Esc closes, and counts as seen
   assert.ok(!(await open(page)));
   assert.strictEqual((await seen(page)).welcome, 1);
   const sizes = {};
-  for (const t of ['gear', 'acts', 'sites', 'tips']) {
-    await page.click('#tab-' + t);
+  for (const t of ['calc', 'gear', 'acts', 'sites', 'tips']) {
+    await openView(page, t);
     sizes[t] = await walk(page, t);
-    await page.click('#tab-calc'); await page.click('#tab-' + t); await page.waitForTimeout(500);
+    await openView(page, 'place'); await openView(page, t); await page.waitForTimeout(500);
     assert.ok(!(await open(page)), 'the ' + t + ' tour ran twice');
   }
-  assert.deepStrictEqual(sizes, { gear: 5, acts: 4, sites: 3, tips: 3 });
-  await page.click('#tab-place'); await page.waitForTimeout(400);
-  assert.ok(!(await open(page)), 'a tour on the place tab');
+  assert.deepStrictEqual(sizes, { calc: 4, gear: 5, acts: 4, sites: 3, tips: 3 });
+  await openView(page, 'place'); await page.waitForTimeout(400);
+  assert.ok(!(await open(page)), 'a tour on the place view');
+  await openView(page, 'prices'); await page.waitForTimeout(400);
+  assert.ok(!(await open(page)), 'the calculator tour again, on the price list');
+  // a visitor who saw the old welcome (it held the calculator's steps) is not shown the calculator's tour
+  await page.evaluate(() => localStorage.setItem('achziv-tour-v1', JSON.stringify({ welcome: 1, gear: 1, acts: 1, sites: 1, tips: 1 })));
+  await openView(page, 'calc'); await page.waitForTimeout(500);
+  assert.ok(!(await open(page)), 'the calculator tour after the old welcome');
 
-  // ---- ? replays the tour of the tab on screen ----
-  await page.click('#tab-gear'); await page.evaluate(() => window.scrollTo(0, 0));
+  // ---- ? replays the tour of the view on screen; on the home page, the welcome ----
+  await openView(page, 'gear'); await page.evaluate(() => window.scrollTo(0, 0));
   await page.click('#tour-help');
   await waitTour(page);
   assert.strictEqual(await page.innerText('#tour-title'), 'רשימת ציוד');
   await page.click('#tour-skip');
   assert.ok(!(await open(page)));
   assert.strictEqual(await page.evaluate(() => document.activeElement.id), 'tour-help', 'focus did not return');
-  await page.click('#tab-calc'); await page.evaluate(() => window.scrollTo(0, 0));
+  await openView(page, 'calc'); await page.evaluate(() => window.scrollTo(0, 0));
+  await page.click('#tour-help'); await waitTour(page);
+  assert.strictEqual(await page.innerText('#tour-title'), '1. מי מגיע?');
+  await page.keyboard.press('Escape');
+  await page.click('#go-home'); await page.waitForSelector('#home', { state: 'visible' });
   await page.click('#tour-help'); await waitTour(page);
   assert.strictEqual(await page.innerText('#tour-title'), 'ברוכים הבאים!');
   await page.keyboard.press('Escape');
 
-  // ---- arriving on a tab by link: the welcome tour first (on the calculator), then that tab's tour on opening ----
+  // ---- arriving on a view by link: that view's tour; the welcome waits for the home page (the phone's back) ----
   page = await visitor('none');
   await page.goto(url + '#tips');
   await waitTour(page);
-  assert.strictEqual(await page.innerText('#tour-title'), 'ברוכים הבאים!');
-  assert.ok(await page.isVisible('#panel-calc'));
-  await page.click('#tour-skip');
-  assert.deepStrictEqual(await seen(page), { welcome: 1 });
-  await page.click('#tab-tips'); await waitTour(page);
   assert.strictEqual(await page.innerText('#tour-title'), 'טיפים מהקבוצה');
+  assert.ok(await page.isVisible('#panel-tips'));
+  await page.click('#tour-skip');
+  assert.deepStrictEqual(await seen(page), { tips: 1 });
+  await page.goBack(); await waitTour(page);
+  assert.ok(await page.isVisible('#home'));
+  assert.strictEqual(await page.innerText('#tour-title'), 'ברוכים הבאים!');
   await page.keyboard.press('Escape');
 
   // ---- reduced motion: the plain jump between steps, no fade ----
@@ -195,7 +207,7 @@ const errors = [];
   // ---- ?notour: nothing ----
   page = await visitor('none');
   await page.goto(url + '?notour'); await page.waitForTimeout(800);
-  await page.click('#tab-gear'); await page.waitForTimeout(500);
+  await openView(page, 'gear'); await page.waitForTimeout(500);
   assert.ok(!(await open(page)), 'a tour under ?notour');
 
   // ---- share: the menu where there is no share sheet ----
@@ -205,12 +217,12 @@ const errors = [];
   assert.ok(await page.isVisible('#share-menu'));
   assert.strictEqual(await page.getAttribute('#share-btn', 'aria-expanded'), 'true');
   const wa = decodeURIComponent(await page.getAttribute('#share-wa', 'href'));
-  assert.ok(wa.startsWith('https://wa.me/?text=') && wa.includes('https://yairsa.github.io/achziv-camping-calculator/'), wa);
+  assert.ok(wa.startsWith('https://wa.me/?text=') && wa.includes('https://yairsa.github.io/campingo/'), wa);
   assert.ok(!/קוד|1234/.test(wa), 'personal data in the shared text');
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'horizontal scroll: share menu');
   await page.click('#share-copy');
   await page.waitForFunction(() => document.getElementById('share-msg').textContent.length > 0);
-  await page.click('h1');
+  await page.click('#hive-general-title');
   assert.ok(await page.isHidden('#share-menu'), 'the menu did not close');
 
   // ---- share: the device's share sheet ----
@@ -220,12 +232,13 @@ const errors = [];
   assert.ok(await page.isHidden('#share-menu'));
   const shared = await page.evaluate(() => window.__shared);
   assert.strictEqual(shared.length, 1);
-  assert.strictEqual(shared[0].url, 'https://yairsa.github.io/achziv-camping-calculator/');
+  assert.strictEqual(shared[0].url, 'https://yairsa.github.io/campingo/');
 
   // ---- the share modal: once, after the first successful registration ----
   page = await visitor('none');
   await page.goto(url);
   await waitTour(page); await page.keyboard.press('Escape');
+  await openView(page, 'calc'); await waitTour(page); await page.keyboard.press('Escape');
   const register = async (user, pin, confirm) => {
     await page.fill('#reg-user', user); await page.fill('#reg-pin', pin);
     if (confirm && await page.isVisible('#reg-pin2')) await page.fill('#reg-pin2', pin);
@@ -264,7 +277,7 @@ const errors = [];
   ctx.window.CAMP.tripId = BEEROT;                                      // the new backend accepts Beerot
   sent.length = 0;
   page = await beerotVisitor();
-  await page.goto(url + '?notour');
+  await page.goto(url + '?notour#calc');
   await page.waitForFunction(() => !document.getElementById('group-card').hidden, null, { timeout: 8000 });
   assert.ok(sent.some(b => b.action === 'summary' && /[?&]trip=beerot-2026-11/.test(b.url)), 'the summary GET names the trip');
   await saveAs(page, 'משפחת בארות', '2468');
@@ -278,7 +291,7 @@ const errors = [];
   // the old backend (no `trip` in any reply): the calculator works, saving says the server is not updated and sends nothing
   stripTrip = true; sent.length = 0;
   page = await beerotVisitor();
-  await page.goto(url + '?notour');
+  await page.goto(url + '?notour#calc');
   await page.waitForFunction(() => document.getElementById('reg-user'));
   assert.ok(await page.isVisible('#reg-save'));
   await saveAs(page, 'משפחת ישן', '1357');
@@ -291,7 +304,7 @@ const errors = [];
   // the Achziv site on the old backend keeps working (that backend is right for Achziv)
   ctx.window.CAMP.tripId = 'achziv-2026-10';
   page = await visitor('none');
-  await page.goto(url + '?notour');
+  await page.goto(url + '?notour#calc');
   await saveAs(page, 'משפחת אכזיב', '8642');
   await page.waitForFunction(() => /נרשמתם|עודכנה/.test(document.getElementById('reg-msg').textContent), null, { timeout: 15000 });
   assert.ok(rows.some(r => r.user === 'משפחת אכזיב'));

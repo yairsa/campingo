@@ -15,6 +15,7 @@ const FIXTURE = { CAMP: load('prices-achziv.js').CAMP, TRIP: load('trip-achziv.j
 module.exports = async function pinTrip(target) {
   await target.addInitScript((fx) => {
     for (const k of Object.keys(fx)) Object.defineProperty(window, k, { get: () => fx[k], set: () => {}, configurable: false });
+    if (!window.CAMPINGO_TODAY) window.CAMPINGO_TODAY = '2026-10-01';   // before the pinned trip: the home page shows it (place.js)
   }, FIXTURE);
 };
 module.exports.FIXTURE = FIXTURE;

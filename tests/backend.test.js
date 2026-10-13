@@ -546,8 +546,8 @@ console.log('activities tests passed');
   const rows = seed.map(r => ({ tour: r[0], step: r[1], key: r[2], title: r[3], text: r[4] }));
   const T = () => P(ctx.route({ action: 'tour' }, null, { tour: () => rows }));
   const at = (tour, key) => rows.findIndex(r => r.tour === names[tour] && r.key === key);
-  const [iTabs, iWho, iWhen, iCost] = [at('welcome', 'tabs'), at('welcome', 'who'), at('welcome', 'when'), at('welcome', 'cost')];
-  assert.deepStrictEqual([iTabs, iWho, iWhen, iCost], [2, 4, 5, 6]);   // consecutive: steps[k] below is rows[k] until 'when' is dropped
+  const [iTabs, iWho, iWhen, iCost] = [at('welcome', 'tabs'), at('calc', 'who'), at('calc', 'when'), at('calc', 'cost')];
+  assert.deepStrictEqual([iTabs, iWho, iWhen, iCost], [2, 6, 7, 8]);   // steps[k] below is rows[k] until 'when' is dropped
   // untouched: every step comes back as seeded
   let res = T();
   assert.ok(res.ok);
@@ -557,8 +557,8 @@ console.log('activities tests passed');
   rows[iWho].title = '   '; rows[iWhen].title = ''; rows[iWhen].text = '';
   res = T();
   assert.deepStrictEqual(res.steps[iTabs], { tour: 'welcome', key: 'tabs', title: 'כותרת חדשה', text: 'שורה\n\nעוד **חשוב**' });
-  assert.deepStrictEqual(res.steps[iWho], { tour: 'welcome', key: 'who', text: texts[iWho].text });
-  assert.ok(!res.steps.some(s => s.key === 'when' && s.tour === 'welcome'));
+  assert.deepStrictEqual(res.steps[iWho], { tour: 'calc', key: 'who', text: texts[iWho].text });
+  assert.ok(!res.steps.some(s => s.key === 'when' && s.tour === 'calc'));
   // an unknown key or tour is ignored; a formula guard is removed
   rows.push({ tour: names.gear, step: 9, key: 'nope', title: 'x', text: 'x' }, { tour: 'לא קיים', step: 1, key: 'hello', title: 'x', text: 'x' });
   rows[iCost].text = "'=1+1";
@@ -569,30 +569,32 @@ console.log('activities tests passed');
   assert.deepStrictEqual(P(ctx.route({ action: 'tour' }, null, {})), { ok: true, steps: [] });
 }
 // the tab follows the site: a tab made by the first version (no `help`, the price list after the cost, the old
-// share text), with one text edited by hand and a stray row
+// share and tabs texts, the calculator's steps in the welcome tour), with one text edited by hand and a stray row
 {
   const P = (o) => JSON.parse(JSON.stringify(o));
   const texts = P(ctx.TOUR_TEXTS_), names = P(ctx.TOUR_NAMES_), retired = P(ctx.TOUR_RETIRED_);
   const oldOrder = ['hello', 'tabs', 'who', 'when', 'cost', 'prices', 'register', 'share'];
-  const d = (k) => texts.find(t => t.tour === 'welcome' && t.key === k);
-  const rows = oldOrder.map((k, i) => ({ tour: names.welcome, step: i + 1, key: k, title: d(k).title,
-    text: k === 'share' ? retired['welcome/share'][0] : d(k).text }))
-    .concat(texts.filter(t => t.tour !== 'welcome').map((t, i) => ({ tour: names[t.tour], step: 1, key: t.key, title: t.title, text: t.text })));
+  const d = (k) => texts.find(t => (t.tour === 'welcome' || t.tour === 'calc') && t.key === k);
+  const old = { share: retired['welcome/share'][0], tabs: retired['welcome/tabs'][0] };
+  const rows = oldOrder.map((k, i) => ({ tour: names.welcome, step: i + 1, key: k, title: d(k).title, text: old[k] || d(k).text }))
+    .concat(texts.filter(t => t.tour !== 'welcome' && t.tour !== 'calc').map((t, i) => ({ tour: names[t.tour], step: 1, key: t.key, title: t.title, text: t.text })));
   rows[2].text = 'נכתב ביד';
   rows.splice(3, 0, { tour: 'משהו', step: 1, key: 'x', title: 'זר', text: 'זר' });
   const fix = P(ctx.tourSync_(rows));
   assert.strictEqual(fix.length, texts.length + 1);
-  assert.deepStrictEqual(fix.slice(0, 5).map(r => r[2]), ['hello', 'help', 'tabs', 'prices', 'who']);
-  assert.deepStrictEqual(fix.slice(0, 9).map(r => r[1]), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  assert.deepStrictEqual(fix.slice(0, 10).map(r => r[2]), ['hello', 'help', 'tabs', 'prices', 'general', 'share', 'who', 'when', 'cost', 'register']);
+  assert.deepStrictEqual(fix.slice(0, 10).map(r => r[1]), [1, 2, 3, 4, 5, 6, 1, 2, 3, 4]);
+  assert.deepStrictEqual(fix.slice(0, 10).map(r => r[0]), [...Array(6).fill(names.welcome), ...Array(4).fill(names.calc)]);
   assert.strictEqual(fix[1][4], d('help').text);                       // the new step, with its text
-  assert.strictEqual(fix[4][4], 'נכתב ביד');                            // a hand edit moves with its row
-  assert.strictEqual(fix[8][4], d('share').text);                       // the retired text is replaced
+  assert.strictEqual(fix[2][4], d('tabs').text);                       // the retired text is replaced
+  assert.strictEqual(fix[6][4], 'נכתב ביד');                            // a hand edit moves with its row, into its new tour
+  assert.strictEqual(fix[5][4], d('share').text);                       // the retired text is replaced
   assert.deepStrictEqual(fix.at(-1).slice(2), ['x', 'זר', 'זר']);       // a stray row stays, at the end
   assert.ok(fix.slice(0, -1).every((r, i) => r[2] === texts[i].key && r[0] === names[texts[i].tour]));
   // once fixed, nothing more to do; an edited share text is never touched
   const again = fix.map(r => ({ tour: r[0], step: r[1], key: r[2], title: r[3], text: r[4] }));
   assert.strictEqual(ctx.tourSync_(again), null);
-  again[8].text = 'שלי';
+  again[5].text = 'שלי';
   assert.strictEqual(ctx.tourSync_(again), null);
   // a freshly seeded tab is already right
   assert.strictEqual(ctx.tourSync_(P(ctx.tourSeedRows_()).map(r => ({ tour: r[0], step: r[1], key: r[2], title: r[3], text: r[4] }))), null);

@@ -705,7 +705,8 @@ function tourSeedRows_() {
 
 // The tab follows the site: a step added in tour-texts.js after the tab was made gets its row, in its place, and
 // the rows keep the site's order and numbering. Yair's text moves with its row; a cell still holding a retired
-// built-in text (TOUR_RETIRED_) gets the current one. Rows with an unknown key stay, at the end.
+// built-in text (TOUR_RETIRED_) gets the current one, and a step that moved to another tour (TOUR_MOVED_) keeps its
+// row's text. Rows with an unknown key stay, at the end.
 // rows: as read ({tour, step, key, title, text}). Returns the tab's new values, or null when it is already right.
 function tourSync_(rows) {
   var byName = tourIds_(), have = {}, rest = [];
@@ -715,7 +716,7 @@ function tourSync_(rows) {
   });
   var n = {}, out = [], same = true;
   TOUR_TEXTS_.forEach(function (d, i) {
-    var k = d.tour + '/' + d.key, r = have[k], retired = TOUR_RETIRED_[k] || [];
+    var k = d.tour + '/' + d.key, r = have[k] || have[TOUR_MOVED_[k]], retired = TOUR_RETIRED_[k] || [];
     n[d.tour] = (n[d.tour] || 0) + 1;
     var title = r ? r.title : d.title, text = r ? r.text : d.text;
     if (r && retired.indexOf(String(text).trim()) >= 0) text = d.text;

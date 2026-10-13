@@ -1,7 +1,7 @@
 // Guided tours: a bubble with an arrow pointing at the real element, which is lit up on a dimmed page.
-// The welcome tour runs on the first visit; each tab's tour runs the first time that tab opens (after the welcome
-// tour closes). Each is shown once, finished or skipped, remembered in localStorage. The ? button replays the
-// current tab's tour. The tours are data, below; their texts are in tour-texts.js. ?notour in the URL, or window.ACHZIV_NOTOUR, turns them off
+// The welcome tour runs the first time the home page shows; each view's tour runs the first time that view opens.
+// Each is shown once, finished or skipped, remembered in localStorage. The ? button replays the current view's tour
+// (on the home page: the welcome). The tours are data, below; their texts are in tour-texts.js. ?notour in the URL, or window.ACHZIV_NOTOUR, turns them off
 // (the other e2e tests set it). Plan: docs/tour-plan.md.
 (function () {
   var KEY = 'achziv-tour-v1';
@@ -13,16 +13,19 @@
   // function (none = a centred bubble); top: scroll to the page top first (for the fixed bars and the header).
   // The text itself is in tour-texts.js, and Yair can edit it in the sheet's הדרכה tab (docs/tour-plan.md §5).
   var TOURS = {
-    welcome: { tab: 'calc', steps: [
+    welcome: { tab: 'home', steps: [
       { key: 'hello' },
       { key: 'help', target: '#tour-help', top: true },
-      { key: 'tabs', target: '.tabs', top: true },
-      { key: 'prices', target: '#open-prices', top: true },
+      { key: 'tabs', target: '#hive-trip .hive' },
+      { key: 'prices', target: '#tab-prices' },
+      { key: 'general', target: '#hive-general .hive' },
+      { key: 'share', target: '#share-btn', top: true }
+    ] },
+    calc: { tab: 'calc', steps: [
       { key: 'who', target: function () { return h2of('base-main'); } },
       { key: 'when', target: function () { return h2of('periods'); } },
       { key: 'cost', target: function () { return h2of('result'); } },
-      { key: 'register', target: function () { return h2of('reg-form'); } },
-      { key: 'share', target: '#share-btn', top: true }
+      { key: 'register', target: function () { return h2of('reg-form'); } }
     ] },
     gear: { tab: 'gear', steps: [
       { key: 'views', target: '#gear-bar .seg' },
@@ -72,16 +75,24 @@
   }
   // plain text → HTML: everything escaped; a blank line starts a paragraph, a single line break stays, **...** is bold
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  function seen() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+  // Before the home page (campingo-plan §4.3) the welcome tour held the calculator's steps: a visitor who saw that
+  // welcome (welcome without hive) has seen the calculator's tour too.
+  function seen() {
+    var s; try { s = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { s = {}; }
+    if (s.welcome && !s.hive) s.calc = 1;
+    return s;
+  }
   function markSeen(name) {
     var s = seen(); s[name] = 1;
+    if (name === 'welcome') s.hive = 1;
     try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* ignore */ }
   }
+  // the view on screen: 'home', or a panel's name (the price list is part of the calculator)
   function currentTab() {
-    var t = document.querySelector('[role=tab][aria-selected="true"]');
-    return t ? t.id.replace('tab-', '') : 'calc';
+    var v = window.CampNav ? window.CampNav.view() : '';
+    return !v ? 'home' : v === 'prices' ? 'calc' : v;
   }
-  function tourFor(tab) { return TOURS[tab] ? tab : 'welcome'; }
+  function tourFor(tab) { return TOURS[tab] && tab !== 'welcome' ? tab : 'welcome'; }
   function el(step) { return typeof step.target === 'function' ? step.target() : document.querySelector(step.target); }
   function visible(e) { return !!(e && e.getClientRects().length); }
 
@@ -216,12 +227,13 @@
 
   function start(n) {
     if (running) return;
-    var t = TOURS[n], tabBtn = $('tab-' + t.tab);
-    if (tabBtn && tabBtn.getAttribute('aria-selected') !== 'true') tabBtn.click();
+    var t = TOURS[n];
+    if (currentTab() !== t.tab) window.CampNav.go(t.tab === 'home' ? '' : t.tab);   // home: a history step back, async
     if (!$('panel-calc').hidden && $('calc-main').hidden) $('close-prices').click();
     running = true; name = n;                               // held while it waits, so nothing else starts meanwhile
     var tries = 0;
     (function go() {
+      if (currentTab() !== t.tab && tries++ < 40) { setTimeout(go, 50); return; }
       if (t.ready && !visible(document.querySelector(t.ready)) && tries++ < 40) { setTimeout(go, 150); return; }
       var tx = textsFor(n);
       steps = t.steps.filter(function (s) { return !s.target || visible(el(s)); }).map(function (s) {
@@ -246,13 +258,12 @@
     setTimeout(next, 0);
   }
 
-  // what to run now: the welcome tour first, then the tour of the tab on screen
+  // what to run now: the tour of the view on screen (the home page's is the welcome), once.
+  // A link straight to a view shows that view's tour; the welcome waits for the home page.
   function next() {
     if (off || running) return;
-    var s = seen();
-    if (!s.welcome) return start('welcome');
-    var tab = currentTab();
-    if (TOURS[tab] && tab !== 'welcome' && !s[tab]) start(tab);
+    var tab = currentTab(), n = tab === 'home' ? 'welcome' : tab;
+    if (TOURS[n] && !seen()[n]) start(n);
   }
 
   // current(): the element the open step points at, for tests/tour.e2e.js

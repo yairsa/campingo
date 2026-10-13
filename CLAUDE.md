@@ -1,6 +1,6 @@
 # Achziv camping calculator — instructions
 
-Static RTL site on GitHub Pages (`main` = live, about 1 minute after a push; no CI, no cost) plus a Google Apps Script backend bound to Yair's registration sheet. Live at https://yairsa.github.io/achziv-camping-calculator/
+Static RTL site on GitHub Pages (`main` = live, about 1 minute after a push; no CI, no cost) plus a Google Apps Script backend bound to Yair's registration sheet. Live at https://yairsa.github.io/campingo/ (CampinGo; the old address `/achziv-camping-calculator/` is a separate repo that forwards here)
 
 ## Gates — run before every commit
 - `node tests/calc.test.js` · `node tests/rtg.test.js` · `python tests/test_trip.py` · `python tools/trip.py --check` · `python crawler/test_crawl.py` · `node tests/backend.test.js` · `python backend/build.py --check` · `node tests/tips.e2e.js` · `node tests/gear.e2e.js` · `node tests/activities.e2e.js` · `node tests/layout.e2e.js` · `node tests/tour.e2e.js` · `node tests/admin.e2e.js` · `node tests/campsites.e2e.js` · `node tests/booking.e2e.js` (headless Chrome, backend mocked; uses the website repo's `playwright-core`, or set `PLAYWRIGHT_CORE`)

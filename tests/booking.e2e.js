@@ -2,6 +2,7 @@
 // Pinned to the Achziv trip (campsite 23, 06/10 to 13/10, tests/pin-trip.js). The crawler's snapshot is injected for
 // that trip (data/availability.js only holds the current trip). The Google URL is mocked: the public summary only.
 // Needs playwright-core (PLAYWRIGHT_CORE=<path>, default: the website repo's copy) and installed Chrome (CHROME=<path>).
+const openView = require('./open-view');
 const assert = require('assert'), path = require('path');
 const { chromium } = require(process.env.PLAYWRIGHT_CORE || 'C:/YairSahar_Business/ParentingUpClose_Website/node_modules/playwright-core');
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
@@ -43,7 +44,7 @@ const q = (n, c) => `&ad${n}=${c[0]}&ch${n}=${c[1]}&inf${n}=${c[2]}`;
   const setNum = async (i, k, v) => { const s = `input[data-i="${i}"][data-k="${k}"]`; await page.fill(s, String(v)); await page.dispatchEvent(s, 'change'); };
 
   await page.goto(url);
-  await page.click('#tab-place');
+  await openView(page, 'place');
   assert.ok(await page.isVisible('#booking'), 'the panel renders and unhides');
   const head = await page.innerText('#booking');
   assert.ok(head.includes('06/10 עד 13/10'), 'dates day-first, never a dash range: ' + head.slice(0, 120));
@@ -93,7 +94,7 @@ const q = (n, c) => `&ad${n}=${c[0]}&ch${n}=${c[1]}&inf${n}=${c[2]}`;
 
   // the form is remembered
   await setCount(2); await setNum(1, 'children', 3);
-  await page.reload(); await page.click('#tab-place');
+  await page.reload(); await openView(page, 'place');
   assert.strictEqual(await rows(), 2, 'family count remembered');
   assert.strictEqual(await page.inputValue('input[data-i="1"][data-k="children"]'), '3', 'composition remembered');
 

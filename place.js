@@ -12,13 +12,27 @@
   var range = dm(T.from) + ' עד ' + dm(T.to) + '/' + T.to.slice(0, 4);
   var place = site ? site.shortName : '';
 
-  // ---- header, title, navigation ----
-  document.title = T.title;
+  // ---- the home page's trip card (docs/campingo-plan.md §3), title, navigation ----
+  // window.CAMPINGO_TODAY (ISO) stands in for today: the tests pin the trip to Achziv, October 2026
+  var now = new Date(), today = window.CAMPINGO_TODAY ||
+    now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2) + '-' + ('0' + now.getDate()).slice(-2);
+  function days(a, b) { return Math.round((Date.parse(b) - Date.parse(a)) / 864e5); }
+  var over = today > T.to, nights = days(T.from, T.to), until = days(today, T.from);
+  document.title = over ? 'CampinGo' : 'CampinGo · ' + T.title;
   var meta = document.querySelector('meta[name=description]');
-  if (meta) meta.setAttribute('content', 'מחשבון עלות לינה לקבוצה ב' + (site ? site.name : T.title) + ', ' + range);
-  var h1 = document.querySelector('header.top h1'), sub = document.querySelector('header.top .sub');
-  if (h1) h1.textContent = T.title;
-  if (sub) sub.innerHTML = 'קמפינג קבוצתי · ' + esc(site ? site.name : '') + ' · ' + esc(range);
+  if (meta) meta.setAttribute('content', 'CampinGo: קמפינג קבוצתי' + (over ? '' : ' ב' + (site ? site.name : T.title) + ', ' + range));
+  function put(id, text) { var e = document.getElementById(id); if (e) e.textContent = text; }
+  if (over) {
+    // the last trip is behind us and trip.json names no later one: say so, and hide the trip's buttons
+    document.body.classList.add('no-trip');
+    put('trip-kicker', 'אין כרגע קמפינג מתוכנן');
+    put('trip-when', 'כשייקבע הקמפינג הבא, הוא יופיע כאן.');
+    ['trip-name', 'trip-dates', 'trip-nav', 'hive-trip'].forEach(function (id) { var e = document.getElementById(id); if (e) e.hidden = true; });
+  } else {
+    put('trip-name', site ? site.shortName : T.title);
+    put('trip-dates', range + ' · ' + (nights === 1 ? 'לילה אחד' : nights + ' לילות'));
+    put('trip-when', today >= T.from ? 'אנחנו שם עכשיו!' : until === 1 ? 'מחר!' : 'בעוד ' + until + ' ימים');
+  }
   var dest = site && (site.waze || site.name);
   var waze = document.getElementById('nav-waze'), gmaps = document.getElementById('nav-gmaps');
   if (dest && waze) waze.href = 'https://waze.com/ul?q=' + encodeURIComponent(dest) + '&navigate=yes';

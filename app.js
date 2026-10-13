@@ -271,68 +271,83 @@
     document.querySelectorAll('.checked').forEach(function (e) { e.textContent = C.checked; });
   }
 
-  // ---------- tabs (arrow keys follow RTL) ----------
-  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role=tab]'));
-  function selectTab(tab, focus) {
-    tabs.forEach(function (t) {
-      var on = t === tab;
-      t.setAttribute('aria-selected', on);
-      t.tabIndex = on ? 0 : -1;
-      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
-    });
-    if (focus) tab.focus();
-    try { history.replaceState(null, '', '#' + tab.id.replace('tab-', '')); } catch (e) { /* ignore */ }
-    document.dispatchEvent(new CustomEvent('tabshown', { detail: tab.id.replace('tab-', '') }));   // tour.js
-  }
-  tabs.forEach(function (t, i) {
-    t.addEventListener('click', function () { selectTab(t); });
-    t.addEventListener('keydown', function (e) {
-      var d = e.key === 'ArrowLeft' ? 1 : e.key === 'ArrowRight' ? -1 : 0;
-      if (e.key === 'Home') { selectTab(tabs[0], true); e.preventDefault(); }
-      else if (e.key === 'End') { selectTab(tabs[tabs.length - 1], true); e.preventDefault(); }
-      else if (d) { selectTab(tabs[(i + d + tabs.length) % tabs.length], true); e.preventDefault(); }
-    });
-  });
-  // The tab row is fixed on top; the calculator's own fixed bar sits right under it.
+  // ---------- home and views (docs/campingo-plan.md §3) ----------
+  // The home page holds the hive; each hexagon opens a view (one of the panels, unchanged inside). The hash names
+  // the view ('' = home), so old shared links (#gear, #prices) still open theirs. Every step is a history entry
+  // carrying its depth from home, so the phone's back button walks back and "→ ראשי" jumps home in one go.
+  var VIEWS = { calc: 'מחשבון לינה', prices: 'מחירון', place: 'על המקום', gear: 'רשימת ציוד', acts: 'פעילויות',
+    sites: 'חניונים', tips: 'טיפים לקמפינג' };
+  var PANELS = ['calc', 'place', 'gear', 'acts', 'sites', 'tips'];
+  var view = null, calcScroll = 0;
+  function $id(id) { return document.getElementById(id); }
+  function viewOf(hash) { hash = (hash || '').replace(/^#/, ''); return VIEWS[hash] ? hash : ''; }
+  function depth() { return (history.state && history.state.d) || 0; }
+  // The bar on top is fixed; the views' own fixed bars sit right under it.
   function tabsHeight() {
     document.documentElement.style.setProperty('--tabs-h', document.querySelector('.tabs').offsetHeight + 'px');
   }
-  tabsHeight();
   window.addEventListener('resize', tabsHeight);
 
-  // ---------- price list: a section inside the calculator ----------
-  // Opening it adds a history step, so the phone's back button closes it like the ✕ does.
-  var calcScroll = 0;
-  function showPrices(on) {
-    var main = document.getElementById('calc-main');
-    if (on === !main.hidden) {
-      if (on) calcScroll = window.scrollY;
-      main.hidden = on;
-      document.getElementById('calc-prices').hidden = !on;
-      document.getElementById('open-prices').setAttribute('aria-expanded', on);
-      var y = on ? 0 : calcScroll;
-      window.scrollTo(0, y);
-      requestAnimationFrame(function () { window.scrollTo(0, y); });   // after the browser's own back-button restore
-    }
-    document.getElementById(on ? 'close-prices' : 'open-prices').focus({ preventScroll: true });
+  function show(v) {
+    var was = view; view = v;
+    if (v === was) return;
+    var panel = v === 'prices' ? 'calc' : v, wasPanel = was === 'prices' ? 'calc' : was;
+    if (wasPanel === 'calc' && was !== 'prices') calcScroll = window.scrollY;
+    $id('home').hidden = !!v;
+    document.querySelector('.tabs').hidden = !v;
+    PANELS.forEach(function (p) { $id('panel-' + p).hidden = p !== panel; });
+    $id('calc-main').hidden = v === 'prices';
+    $id('calc-prices').hidden = v !== 'prices';
+    $id('open-prices').setAttribute('aria-expanded', v === 'prices');
+    $id('view-title').textContent = VIEWS[v] || '';
+    document.body.setAttribute('data-view', v || 'home');
+    tabsHeight();
+    // the price list opens from the top, and closing it returns to the same place in the calculator
+    var y = v === 'calc' && was === 'prices' ? calcScroll : 0;
+    window.scrollTo(0, y);
+    requestAnimationFrame(function () { window.scrollTo(0, y); });   // after the browser's own back-button restore
+    if (panel !== wasPanel) document.dispatchEvent(new CustomEvent('tabshown', { detail: panel || 'home' }));   // tour.js
+    return was;
   }
-  document.getElementById('open-prices').addEventListener('click', function () {
-    // push first: the browser stores the calculator's scroll position with the entry being left
-    try { history.pushState({ prices: 1 }, '', '#prices'); } catch (e) { /* ignore */ }
-    showPrices(true);
+  // focus follows the step: into a view its title (the price list: its ✕), back home the hexagon it came from
+  function focusAfter(v, was) {
+    var e = v === 'prices' && was === 'calc' ? $id('close-prices') : v === 'calc' && was === 'prices' ? $id('open-prices')
+      : v ? $id('view-title') : was && $id('tab-' + was);
+    if (e) e.focus({ preventScroll: true });
+  }
+  function go(v) {
+    try { history.pushState({ v: v, d: depth() + 1 }, '', '#' + v); } catch (e) { /* ignore */ }
+    focusAfter(v, show(v));
+  }
+  function home() {
+    if (depth()) { history.go(-depth()); return; }                    // popstate shows it
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* ignore */ }
+    focusAfter('', show(''));
+  }
+  document.querySelectorAll('.hex[data-view]').forEach(function (b) {
+    b.addEventListener('click', function () { go(b.getAttribute('data-view')); });
   });
-  document.getElementById('close-prices').addEventListener('click', function () {
-    if (history.state && history.state.prices) { history.back(); return; }     // popstate closes it
-    showPrices(false);
-    try { history.replaceState(null, '', '#calc'); } catch (e) { /* ignore */ }
+  $id('go-home').addEventListener('click', home);
+  $id('brand').addEventListener('click', function (e) { e.preventDefault(); if (view) home(); });
+  $id('open-prices').addEventListener('click', function () { go('prices'); });
+  $id('close-prices').addEventListener('click', function () {
+    if (history.state && history.state.v === 'prices' && depth() > 1) { history.back(); return; }   // opened from the calculator
+    try { history.replaceState({ v: 'calc', d: depth() }, '', '#calc'); } catch (e) { /* ignore */ }
+    focusAfter('calc', show('calc'));
   });
-  window.addEventListener('popstate', function () {
-    if (!document.getElementById('panel-calc').hidden) showPrices(!!(history.state && history.state.prices));
-  });
+  window.addEventListener('popstate', function () { var v = viewOf(location.hash); focusAfter(v, show(v)); });
+  // for tour.js: which view is on screen ('' = home), and the way to another one
+  window.CampNav = { view: function () { return view; }, go: function (v) { if (v) { if (v !== view) go(v); } else if (view) home(); } };
 
-  var fromHash = document.getElementById('tab-' + location.hash.slice(1));
-  if (fromHash) selectTab(fromHash);
-  else if (location.hash === '#prices') { showPrices(true); document.activeElement.blur(); }   // an old link to the price tab
+  // A link straight to a view opens it over a home entry, so back (or → ראשי) lands on the home page, not off the site.
+  var first = viewOf(location.hash);
+  if (first) {
+    try {
+      history.replaceState(null, '', location.pathname + location.search);
+      history.pushState({ v: first, d: 1 }, '', '#' + first);
+    } catch (e) { /* ignore */ }
+  }
+  show(first);
 
   // ---------- registration (Google Sheet backend) ----------
   var ERR = {

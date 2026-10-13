@@ -8,17 +8,46 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=ea14f1fa">
-  <link rel="stylesheet" href="explorer.css?v=31490a01">
+  <link rel="stylesheet" href="style.css?v=d8ca1b47">
+  <link rel="stylesheet" href="explorer.css?v=906b42c2">
   <link rel="stylesheet" href="booking.css?v=4e747ea2">
 </head>
 <body>
   <a class="skip" href="#main">דלג לתוכן</a>
 
+  <!-- the brand bar, on every view (docs/campingo-plan.md §3) -->
   <header class="top">
-    <h1>קמפינג קבוצתי</h1>
-    <p class="sub"></p>   <!-- place.js fills both from trip.js -->
+    <a class="brand" href="#" id="brand" aria-label="CampinGo, לדף הראשי">
+      <svg class="brand-logo" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6 4 40h40z" style="fill:var(--hero-a)"/><path d="M24 6 14 40h20z" style="fill:var(--hero-b)"/><path d="M24 22 19 40h10z" style="fill:var(--bg)"/><circle cx="38" cy="11" r="4" style="fill:var(--sun)"/></svg>
+      <span class="brand-name">Camp<span>in</span>Go</span>
+    </a>
     <div class="top-tools">
+      <button type="button" id="share-btn" class="btn-secondary nav-btn" aria-controls="share-menu" aria-expanded="false"><svg class="nav-logo" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4"/></svg>שיתוף</button>
+      <button type="button" id="tour-help" class="btn-secondary" aria-label="הדרכה: סיור באתר">?</button>
+      <div id="share-menu" class="share-menu" hidden></div>
+    </div>
+  </header>
+
+  <!-- on a view: the way back home, fixed on top (the views' own bars sit under it: --tabs-h) -->
+  <nav class="tabs" aria-label="ניווט" hidden>
+    <button type="button" id="go-home" class="btn-secondary">→ ראשי</button>
+    <h1 id="view-title" tabindex="-1"></h1>
+  </nav>
+
+  <main id="main">
+
+    <!-- ===== Home: the next trip and the hive ===== -->
+    <section id="home" aria-labelledby="home-title">
+      <div class="hero">
+        <h1 id="home-title">CampinGo</h1>
+        <p class="tagline">קמפינג קבוצתי, מסודר מראש</p>
+        <!-- place.js fills the card from trip.js and the crawled campsite -->
+        <div class="trip-card" id="trip-card">
+          <p class="trip-kicker" id="trip-kicker">הקמפינג הבא</p>
+          <h2 class="trip-name" id="trip-name"></h2>
+          <p class="trip-dates" id="trip-dates"></p>
+          <p class="trip-when" id="trip-when"></p>
+          <div class="trip-nav" id="trip-nav">
       <!-- navigation to the campsite by its Waze name: place.js sets the links -->
       <a id="nav-waze" class="btn-secondary nav-btn" href="https://waze.com/" target="_blank" rel="noopener" aria-label="ניווט לחניון ב-Waze">
         <svg class="nav-logo" viewBox="0 0 24 24" aria-hidden="true"><path fill="#33ccff" stroke="#0b1d26" stroke-width="1.2" d="M12 3c-4.7 0-8.3 3.3-8.3 7.6 0 1.8-.5 2.9-1.6 3.6.9 1.6 2.4 2.6 4.3 3.1a2 2 0 0 0 3.8.7h3.6a2 2 0 0 0 3.8-.6c2.6-1 4.5-3.6 4.5-6.6C22.1 6.4 17.6 3 12 3z"/><circle cx="9.6" cy="9.4" r="1" fill="#0b1d26"/><circle cx="14.8" cy="9.4" r="1" fill="#0b1d26"/><path d="M9 12.4c1.6 1.8 4.6 1.8 6.2 0" fill="none" stroke="#0b1d26" stroke-width="1.2" stroke-linecap="round"/></svg>
@@ -26,25 +55,31 @@
       <a id="nav-gmaps" class="btn-secondary nav-btn" href="https://www.google.com/maps/" target="_blank" rel="noopener" aria-label="ניווט לחניון ב-Google Maps">
         <svg class="nav-logo" viewBox="0 0 92.3 132.3" aria-hidden="true"><path fill="#1a73e8" d="M60.2 2.2C55.8.8 51 0 46.1 0 32 0 19.3 6.4 10.8 16.5l21.8 18.3L60.2 2.2z"/><path fill="#ea4335" d="M10.8 16.5C4.1 24.5 0 34.9 0 46.1c0 8.7 1.7 15.7 4.6 22l28-33.3-21.8-18.3z"/><path fill="#4285f4" d="M46.2 28.5c9.8 0 17.7 7.9 17.7 17.7 0 4.3-1.6 8.3-4.2 11.4 0 0 13.9-16.6 27.5-32.7-5.6-10.8-15.3-19-27-22.7L32.6 34.8c3.3-3.8 8.1-6.3 13.6-6.3"/><path fill="#fbbc04" d="M46.2 63.8c-9.8 0-17.7-7.9-17.7-17.7 0-4.3 1.5-8.3 4.1-11.3l-28 33.3c4.8 10.6 12.8 19.2 21 29.9l34.1-40.5c-3.3 3.9-8.1 6.3-13.5 6.3"/><path fill="#34a853" d="M59.1 109.2c15.4-24.1 33.3-35 33.3-63 0-7.7-1.9-14.9-5.2-21.3L25.6 98c2.6 3.4 5.3 7.3 7.9 11.3 9.4 14.5 6.8 23.1 12.8 23.1s3.4-8.7 12.8-23.2"/></svg>
       </a>
-      <button type="button" id="share-btn" class="btn-secondary nav-btn" aria-controls="share-menu" aria-expanded="false"><svg class="nav-logo" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4"/></svg>שיתוף האתר</button>
-      <button type="button" id="tour-help" class="btn-secondary" aria-label="הדרכה: סיור באתר">?</button>
-      <div id="share-menu" class="share-menu" hidden></div>
-    </div>
-  </header>
+          </div>
+        </div>
+      </div>
 
-  <nav class="tabs" role="tablist" aria-label="חלקי האתר">
-    <button role="tab" id="tab-calc"   aria-controls="panel-calc"   aria-selected="true">מחשבון לינה</button>
-    <button role="tab" id="tab-place"  aria-controls="panel-place"  aria-selected="false" tabindex="-1">על המקום</button>
-    <button role="tab" id="tab-gear"   aria-controls="panel-gear"   aria-selected="false" tabindex="-1">ציוד</button>
-    <button role="tab" id="tab-acts"   aria-controls="panel-acts"   aria-selected="false" tabindex="-1">פעילויות</button>
-    <button role="tab" id="tab-sites"  aria-controls="panel-sites"  aria-selected="false" tabindex="-1">חניונים</button>
-    <button role="tab" id="tab-tips"   aria-controls="panel-tips"   aria-selected="false" tabindex="-1">טיפים</button>
-  </nav>
-
-  <main id="main">
+      <!-- the hive: hexagon buttons; each opens its view (app.js). Ids keep the old tab names: gear.js etc. listen on them -->
+      <nav class="hive-wrap" id="hive-trip" aria-label="הקמפינג הבא">
+        <ul class="hive">
+          <li><button type="button" class="hex" id="tab-calc" data-view="calc" aria-controls="panel-calc"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01M8.5 15h.01M12 15h.01M15.5 15h.01M8.5 18h.01M12 18h3.5"/></svg><span>מחשבון</span></button></li>
+          <li><button type="button" class="hex" id="tab-prices" data-view="prices" aria-controls="panel-calc"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/></svg><span>מחירון</span></button></li>
+          <li><button type="button" class="hex" id="tab-gear" data-view="gear" aria-controls="panel-gear"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6v3H9zM6 7h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1zM9 12h6M9 16h6"/></svg><span>רשימת ציוד</span></button></li>
+          <li><button type="button" class="hex" id="tab-place" data-view="place" aria-controls="panel-place"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span>על המקום</span></button></li>
+          <li><button type="button" class="hex" id="tab-acts" data-view="acts" aria-controls="panel-acts"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg><span>פעילויות</span></button></li>
+        </ul>
+      </nav>
+      <nav class="hive-wrap" id="hive-general" aria-labelledby="hive-general-title">
+        <h2 class="hive-title" id="hive-general-title">כללי</h2>
+        <ul class="hive">
+          <li><button type="button" class="hex" id="tab-sites" data-view="sites" aria-controls="panel-sites"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 2 20h20zM12 4l-4 16M12 4l4 16"/></svg><span>חניונים</span></button></li>
+          <li><button type="button" class="hex" id="tab-tips" data-view="tips" aria-controls="panel-tips"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg><span>טיפים לקמפינג</span></button></li>
+        </ul>
+      </nav>
+    </section>
 
     <!-- ===== Calculator ===== -->
-    <section role="tabpanel" id="panel-calc" aria-labelledby="tab-calc">
+    <section id="panel-calc" aria-labelledby="view-title" hidden>
       <!-- the price list: a section of the calculator, opened by the button, closed by ✕ or the phone's back -->
       <div id="calc-prices" hidden>
         <div class="subbar"><button type="button" id="close-prices" class="btn-secondary">✕ חזרה למחשבון</button></div>
@@ -159,7 +194,7 @@
     </section>
 
     <!-- ===== Place ===== -->
-    <section role="tabpanel" id="panel-place" aria-labelledby="tab-place" hidden>
+    <section id="panel-place" aria-labelledby="view-title" hidden>
 
       <div class="card" id="booking" hidden></div>   <!-- booking.js (§5.5) -->
 
@@ -167,7 +202,7 @@
     </section>
 
     <!-- ===== Campsites explorer (explorer.js) ===== -->
-    <section role="tabpanel" id="panel-sites" aria-labelledby="tab-sites" hidden>
+    <section id="panel-sites" aria-labelledby="view-title" hidden>
       <div class="card">
         <h2>חניוני לילה של רשות הטבע והגנים</h2>
         <p class="hint">כל חניוני הלילה שאפשר להזמין, לפי אזור. המחיר למשפחה הוא הערכה לפי ההרכב והתאריכים במחשבון. בדיקת הזמינות נפתחת בדף ההזמנה עצמו, והוא המילה האחרונה.</p>
@@ -182,7 +217,7 @@
     </section>
 
     <!-- ===== Tips ===== -->
-    <section role="tabpanel" id="panel-tips" aria-labelledby="tab-tips" hidden>
+    <section id="panel-tips" aria-labelledby="view-title" hidden>
       <div class="card">
         <h2>טיפים מהקבוצה</h2>
         <p class="hint">טיפים שחברי הקבוצה כתבו — ציוד, לינה, אוכל, ילדים ועוד. כל טיפ ותגובה מופיעים באתר אחרי אישור של המארגן.</p>
@@ -234,13 +269,13 @@
     </section>
 
     <!-- ===== Equipment ===== -->
-    <section role="tabpanel" id="panel-gear" aria-labelledby="tab-gear" hidden>
+    <section id="panel-gear" aria-labelledby="view-title" hidden>
       <div class="card">
         <h2>רשימת ציוד אישית</h2>
         <p class="hint">בחרו מה אתם לוקחים, ואז סמנו מה כבר ארוז. הרשימה נשמרת בדפדפן הזה בלבד — להעברה לטלפון אחר, שלחו אותה בוואטסאפ.</p>
       </div>
 
-      <!-- fixed under the tab row: the view toggle, and in the picking view the search and tags -->
+      <!-- fixed under the bar on top: the view toggle, and in the picking view the search and tags -->
       <div id="gear-bar" class="gbar">
         <div class="seg" role="group" aria-label="תצוגה">
           <button type="button" id="gear-view-pick" aria-pressed="true">בחירת פריטים</button>
@@ -313,7 +348,7 @@
     </section>
 
     <!-- ===== Activities ===== -->
-    <section role="tabpanel" id="panel-acts" aria-labelledby="tab-acts" hidden>
+    <section id="panel-acts" aria-labelledby="view-title" hidden>
       <div class="card">
         <h2>פעילויות בקבוצה</h2>
         <p class="hint">פעילויות שמשפחות בקבוצה מתכננות: לכולם, למבוגרים או לילדים. משפחה רשומה יכולה להוסיף פעילות או להצטרף אליה, עם השם והקוד של ההרשמה.</p>
@@ -321,7 +356,7 @@
         <button type="button" id="acts-add" class="btn-secondary">+ הוספת פעילות</button>
       </div>
 
-      <!-- fixed under the tab row: the view toggle and the filters -->
+      <!-- fixed under the bar on top: the view toggle and the filters -->
       <div id="acts-bar" class="gbar">
         <div class="seg" role="group" aria-label="תצוגה">
           <button type="button" id="acts-view-list" aria-pressed="true">לפי ימים</button>
@@ -351,7 +386,7 @@
     </section>
   </main>
 
-  <!-- the site-wide note, on every tab (docs/tour-plan.md §2) -->
+  <!-- the site-wide note, on every view (docs/tour-plan.md §2) -->
   <footer class="site-note">
     <p>האתר אינו רשמי, לנוחותכם בלבד, ונבנה לתועלת הקבוצה. לאתר אין קשר למארגנים או לרשות הטבע והגנים, וללא התחייבות. ט.ל.ח.</p>
     <p>לא נאספים פרטים אישיים: רשימת הציוד נשמרת רק בדפדפן שלכם, ובהרשמה נשמר רק השם שבחרתם, מספר הנפשות, והתאריכים.</p>
@@ -368,21 +403,21 @@
   <!-- crawled data (crawler/crawl.py): not stamped, the crawler changes it -->
   <script src="data/campsites.js"></script>
   <script src="data/availability.js"></script>
-  <script src="place.js?v=72802386"></script>
+  <script src="place.js?v=f6f458d3"></script>
   <script src="prices.js?v=c0c3e628"></script>
   <script src="calc.js?v=71cdda73"></script>
-  <script src="app.js?v=5d2c816f"></script>
+  <script src="app.js?v=6d62188a"></script>
   <script src="search.js?v=31352673"></script>
   <script src="tips.js?v=34713f3a"></script>
   <script src="gear-seed.js?v=fa15e65d"></script>
   <script src="gear.js?v=8bc913fc"></script>
   <script src="acts-demo.js?v=b2f8d20b"></script>
   <script src="activities.js?v=ffb49fbd"></script>
-  <script src="share.js?v=ef8e0385"></script>
+  <script src="share.js?v=2bc6398e"></script>
   <script src="rtg.js?v=fcaf85ad"></script>
   <script src="explorer.js?v=8bfb03ad"></script>
   <script src="booking.js?v=bc9953e9"></script>
-  <script src="tour-texts.js?v=6cb5ac0e"></script>
-  <script src="tour.js?v=8f498648"></script>
+  <script src="tour-texts.js?v=3b1efe51"></script>
+  <script src="tour.js?v=6da0029a"></script>
 </body>
 </html>
