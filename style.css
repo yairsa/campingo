@@ -435,11 +435,13 @@ p.awho { border: 0; padding: 0; }
 /* the brand bar: CampinGo, share, the tour's ? (tour.js, share.js) */
 .top { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-block: 10px; }
 .brand { display: inline-flex; align-items: center; gap: 8px; color: var(--text); text-decoration: none; font-weight: 700; font-size: 1.3rem; }
-/* the wordmark: "Camp", the i and the tent as an inline SVG (index.html #wm-in), "Go" (docs/campingo-plan.md §4.5) */
+/* the wordmark: "Camp", the i and the tent as an inline SVG (index.html #wm-in), "Go" (docs/campingo-plan.md §4.5).
+   The sun/moon swap goes through custom properties: a <use> clone ignores selectors on its ancestors, dark mode included. */
 .wm { display: inline-block; direction: ltr; white-space: nowrap; }
-.wm-in { width: .96em; height: 1em; margin: 0 .02em; vertical-align: baseline; fill: currentColor; overflow: visible; }
-.wm-flap { opacity: .72; }
-.wm-sun { fill: var(--sun); }
+.wm-in { width: 1.031em; height: 1em; margin: 0; vertical-align: baseline; fill: currentColor; overflow: visible; }
+.wm-flap { opacity: .64; }
+.wm-day { display: var(--wm-day); } .wm-night { display: var(--wm-night); }
+.wm-day .wm-dot { fill: var(--wm-sun); } .wm-night .wm-dot { fill: var(--wm-moon); }
 .wm-glow { opacity: .28; }
 .brand .wm-in { color: var(--accent); }
 body[data-view="home"] .brand { visibility: hidden; }          /* the hero says it, bigger */
@@ -550,6 +552,7 @@ body[data-view="home"] .brand { visibility: hidden; }          /* the hero says 
   --rim: inset 1px 1px 0 rgba(255, 255, 255, .55);
   --glow: color-mix(in srgb, var(--sun) 70%, transparent);
   --moon: #f3e3b0;
+  --wm-sun: #fee901; --wm-moon: #dbc98f; --wm-day: inline; --wm-night: none;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -561,6 +564,7 @@ body[data-view="home"] .brand { visibility: hidden; }          /* the hero says 
     --cast-f: drop-shadow(4px 6px 8px rgba(0, 0, 0, .6));
     --rim: inset 1px 1px 0 rgba(205, 220, 255, .22);
     --glow: rgba(243, 227, 176, .45);
+    --wm-day: none; --wm-night: inline;
   }
 }
 :root[data-theme="dark"] {
@@ -572,6 +576,7 @@ body[data-view="home"] .brand { visibility: hidden; }          /* the hero says 
     --cast-f: drop-shadow(4px 6px 8px rgba(0, 0, 0, .6));
     --rim: inset 1px 1px 0 rgba(205, 220, 255, .22);
     --glow: rgba(243, 227, 176, .45);
+    --wm-day: none; --wm-night: inline;
 }
 body { background-image: var(--beam); background-attachment: fixed; }
 .hero { box-shadow: var(--rim), var(--cast); }
