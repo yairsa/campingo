@@ -180,11 +180,11 @@ td, th { padding: 6px 4px; border-bottom: 1px solid var(--line); text-align: sta
 /* 3D with a glow, matching the hive (Yair, 14/10/2026) */
 .btn-primary, .btn-secondary { transition: box-shadow .15s, transform .15s; }
 .btn-primary { background-image: linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(0, 0, 0, .12));
-  box-shadow: 0 3px 0 color-mix(in srgb, var(--accent) 55%, #000), 0 5px 10px rgba(0, 0, 0, .2); }
+  box-shadow: var(--rim), 2px 3px 0 color-mix(in srgb, var(--accent) 55%, #000), var(--cast); }
 .btn-secondary:not(.nav-btn) { background-image: linear-gradient(180deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0)); }
-.btn-secondary { box-shadow: 0 2px 0 color-mix(in srgb, var(--accent) 35%, transparent), 0 3px 6px rgba(0, 0, 0, .1); }
-.btn-primary:hover, .btn-secondary:hover { box-shadow: 0 3px 0 color-mix(in srgb, var(--accent) 55%, #000), 0 0 14px color-mix(in srgb, var(--sun) 60%, transparent); }
-.btn-primary:active, .btn-secondary:active { transform: translateY(2px); box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 55%, #000); }
+.btn-secondary { box-shadow: var(--rim), 2px 2px 0 color-mix(in srgb, var(--accent) 35%, transparent), var(--cast-sm); }
+.btn-primary:hover, .btn-secondary:hover { box-shadow: var(--rim), 2px 3px 0 color-mix(in srgb, var(--accent) 55%, #000), 0 0 14px var(--glow); }
+.btn-primary:active, .btn-secondary:active { transform: translate(1px, 2px); box-shadow: 1px 1px 0 color-mix(in srgb, var(--accent) 55%, #000); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn-secondary:not(.nav-btn) { background-image: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, 0)); } }
 :root[data-theme="dark"] .btn-secondary:not(.nav-btn) { background-image: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, 0)); }
 @media (prefers-reduced-motion: reduce) { .btn-primary, .btn-secondary { transition: none; } .btn-primary:active, .btn-secondary:active { transform: none; } }
@@ -476,20 +476,20 @@ body[data-view="home"] .brand { visibility: hidden; }          /* the hero says 
   gap: 0 var(--hg); max-width: calc(var(--hw) * 3 + var(--hg) * 2); }
 .hive li { --c: var(--hex); --c-hi: var(--hex-hi); --c-edge: color-mix(in srgb, var(--c) 55%, #000);
   margin-bottom: calc(var(--hh) * -.25 + var(--hg));
-  filter: drop-shadow(0 4px 0 var(--c-edge)) drop-shadow(0 8px 8px rgba(0, 0, 0, .28)); transition: filter .15s; }
+  filter: drop-shadow(3px 4px 0 var(--c-edge)) var(--cast-f); transition: filter .15s; }
 .hive li:hover, .hive li:has(.hex:focus-visible) {
-  filter: drop-shadow(0 4px 0 var(--c-edge)) drop-shadow(0 0 14px color-mix(in srgb, var(--sun) 75%, transparent)); }
+  filter: drop-shadow(3px 4px 0 var(--c-edge)) drop-shadow(0 0 14px var(--glow)); }
 #hive-general li { --c: var(--hex-gen); --c-hi: var(--hex-gen-hi); }
 .hex { position: relative; isolation: isolate; width: var(--hw); height: var(--hh);
   border: 0; padding: 0 12px; cursor: pointer; font: inherit; color: var(--hex-ink);
-  background: linear-gradient(170deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, .06) 42%, rgba(0, 0, 0, .14)) var(--c);
+  background: var(--beam-obj) fixed, linear-gradient(135deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, .06) 42%, rgba(0, 0, 0, .16)) var(--c);
   text-shadow: 0 1px 1px rgba(0, 0, 0, .3);
   clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center;
   transition: background-color .15s, transform .15s; }
 .hex:hover { background-color: var(--c-hi); transform: translateY(-2px); }
 .hex:active { transform: translateY(3px); }
-.hive li:has(.hex:active) { filter: drop-shadow(0 1px 0 var(--c-edge)) drop-shadow(0 3px 4px rgba(0, 0, 0, .25)); }
+.hive li:has(.hex:active) { filter: drop-shadow(1px 1px 0 var(--c-edge)) drop-shadow(1px 2px 3px rgba(0, 0, 0, .3)); }
 .hex svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .hex span { font-weight: 700; font-size: .95rem; line-height: 1.15; }
 /* focus: the outline would be clipped, so the ring is the hexagon's own edge in the focus colour */
@@ -536,3 +536,48 @@ body[data-view="home"] .brand { visibility: hidden; }          /* the hero says 
 
 /* place.js: the crawled data is older than 3 days (the crawler stopped) */
 .stale { color: var(--danger); }
+
+/* ---- the camp by day (light) and by night (dark): one light source for the whole page (docs/campingo-plan.md §4.5) ----
+   The light is top-left, where the hero's sun / moon is. By day raised objects cast a shadow to the bottom-right;
+   by night a moonlight beam crosses the page and the objects in its path catch it (the same gradient, fixed to the
+   viewport, so it lines up across them), with a moonlit rim on the edges that face the light. */
+:root {
+  --beam: radial-gradient(ellipse 110% 70% at 0 0, rgba(255, 214, 140, .28), rgba(255, 214, 140, 0) 60%);
+  --beam-obj: radial-gradient(ellipse 110% 70% at 0 0, rgba(255, 244, 214, .30), rgba(255, 244, 214, 0) 60%);
+  --cast: 6px 8px 16px rgba(80, 56, 20, .20), 2px 3px 4px rgba(80, 56, 20, .12);
+  --cast-sm: 3px 4px 8px rgba(80, 56, 20, .16);
+  --cast-f: drop-shadow(6px 8px 7px rgba(80, 56, 20, .30));
+  --rim: inset 1px 1px 0 rgba(255, 255, 255, .55);
+  --glow: color-mix(in srgb, var(--sun) 70%, transparent);
+  --moon: #f3e3b0;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --beam: linear-gradient(118deg, transparent 16%, rgba(190, 210, 255, .05) 28%, rgba(190, 210, 255, .11) 38%, rgba(190, 210, 255, .05) 48%, transparent 60%),
+      radial-gradient(circle at 0 0, rgba(200, 215, 255, .10), transparent 40%);
+    --beam-obj: linear-gradient(118deg, transparent 16%, rgba(205, 220, 255, .08) 28%, rgba(205, 220, 255, .22) 38%, rgba(205, 220, 255, .08) 48%, transparent 60%);
+    --cast: 4px 6px 18px rgba(0, 0, 0, .55), 1px 2px 3px rgba(0, 0, 0, .4);
+    --cast-sm: 2px 4px 8px rgba(0, 0, 0, .45);
+    --cast-f: drop-shadow(4px 6px 8px rgba(0, 0, 0, .6));
+    --rim: inset 1px 1px 0 rgba(205, 220, 255, .22);
+    --glow: rgba(243, 227, 176, .45);
+  }
+}
+:root[data-theme="dark"] {
+    --beam: linear-gradient(118deg, transparent 16%, rgba(190, 210, 255, .05) 28%, rgba(190, 210, 255, .11) 38%, rgba(190, 210, 255, .05) 48%, transparent 60%),
+      radial-gradient(circle at 0 0, rgba(200, 215, 255, .10), transparent 40%);
+    --beam-obj: linear-gradient(118deg, transparent 16%, rgba(205, 220, 255, .08) 28%, rgba(205, 220, 255, .22) 38%, rgba(205, 220, 255, .08) 48%, transparent 60%);
+    --cast: 4px 6px 18px rgba(0, 0, 0, .55), 1px 2px 3px rgba(0, 0, 0, .4);
+    --cast-sm: 2px 4px 8px rgba(0, 0, 0, .45);
+    --cast-f: drop-shadow(4px 6px 8px rgba(0, 0, 0, .6));
+    --rim: inset 1px 1px 0 rgba(205, 220, 255, .22);
+    --glow: rgba(243, 227, 176, .45);
+}
+body { background-image: var(--beam); background-attachment: fixed; }
+.hero { box-shadow: var(--rim), var(--cast); }
+.card, body #panel-sites .site { background-image: var(--beam-obj); background-attachment: fixed; box-shadow: var(--rim), var(--cast); }
+/* by night the hero's sun is a crescent moon with a faint halo */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .hero::after { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 150'%3E%3CradialGradient id='g'%3E%3Cstop offset='.45' stop-color='%23f3e3b0' stop-opacity='.22'/%3E%3Cstop offset='1' stop-color='%23f3e3b0' stop-opacity='0'/%3E%3C/radialGradient%3E%3Cmask id='m'%3E%3Crect width='150' height='150' fill='%23fff'/%3E%3Ccircle cx='90' cy='64' r='27'/%3E%3C/mask%3E%3Ccircle cx='75' cy='75' r='62' fill='url(%23g)'/%3E%3Ccircle cx='75' cy='75' r='30' fill='%23f3e3b0' mask='url(%23m)'/%3E%3C/svg%3E") center / contain no-repeat; }
+}
+:root[data-theme="dark"] .hero::after { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 150'%3E%3CradialGradient id='g'%3E%3Cstop offset='.45' stop-color='%23f3e3b0' stop-opacity='.22'/%3E%3Cstop offset='1' stop-color='%23f3e3b0' stop-opacity='0'/%3E%3C/radialGradient%3E%3Cmask id='m'%3E%3Crect width='150' height='150' fill='%23fff'/%3E%3Ccircle cx='90' cy='64' r='27'/%3E%3C/mask%3E%3Ccircle cx='75' cy='75' r='62' fill='url(%23g)'/%3E%3Ccircle cx='75' cy='75' r='30' fill='%23f3e3b0' mask='url(%23m)'/%3E%3C/svg%3E") center / contain no-repeat; }
