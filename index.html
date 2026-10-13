@@ -15,11 +15,18 @@
 <body>
   <a class="skip" href="#main">דלג לתוכן</a>
 
+  <!-- the wordmark's "in": the i, then the logo's tent as the n (docs/campingo-plan.md §4.5). Units: 100 = 1em, the baseline at the bottom -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <g id="wm-tent"><path fill-rule="evenodd" d="M22 100 57 34 92 100zM57 34 42 100h30z"/><path class="wm-flap" fill-rule="evenodd" d="M57 34 42 100h30zM57 60 47 100h20z"/></g>
+    <g id="wm-in-peg"><path d="M2 50h14v36l-7 14-7-14z"/><circle class="wm-sun wm-glow" cx="9" cy="30" r="14"/><circle class="wm-sun" cx="9" cy="30" r="9"/><use href="#wm-tent"/></g>
+    <g id="wm-in-flag"><rect x="2" y="14" width="14" height="86" rx="2"/><path class="wm-sun" d="M16 15 38 24 16 33z"/><use href="#wm-tent"/></g>
+    <g id="wm-in-lamp"><rect x="2" y="50" width="14" height="50" rx="2"/><circle class="wm-sun wm-glow" cx="9" cy="25" r="15"/><circle cx="9" cy="7" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="1" y="10" width="16" height="4" rx="1.5"/><rect class="wm-sun" x="3" y="14" width="12" height="18" rx="3"/><rect x="1" y="32" width="16" height="4" rx="1.5"/><use href="#wm-tent"/></g>
+  </defs></svg>
+
   <!-- the brand bar, on every view (docs/campingo-plan.md §3) -->
   <header class="top">
     <a class="brand" href="#" id="brand" aria-label="CampinGo, לדף הראשי">
-      <svg class="brand-logo" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6 4 40h40z" style="fill:var(--hero-a)"/><path d="M24 6 14 40h20z" style="fill:var(--hero-b)"/><path d="M24 22 19 40h10z" style="fill:var(--bg)"/><circle cx="38" cy="11" r="4" style="fill:var(--sun)"/></svg>
-      <span class="brand-name">Camp<span>in</span>Go</span>
+      <span class="wm" aria-hidden="true">Camp<svg class="wm-in" viewBox="0 0 96 100"><use href="#wm-in-peg"/></svg>Go</span>
     </a>
     <div class="top-tools">
       <button type="button" id="share-btn" class="btn-secondary nav-btn" aria-controls="share-menu" aria-expanded="false"><svg class="nav-logo" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4"/></svg>שיתוף</button>
@@ -39,7 +46,7 @@
     <!-- ===== Home: the next trip and the hive ===== -->
     <section id="home" aria-labelledby="home-title">
       <div class="hero">
-        <h1 id="home-title">CampinGo</h1>
+        <h1 id="home-title"><span class="wm" role="img" aria-label="CampinGo">Camp<svg class="wm-in" viewBox="0 0 96 100" aria-hidden="true"><use href="#wm-in-peg"/></svg>Go</span></h1>
         <p class="tagline">קמפינג קבוצתי, מסודר מראש</p>
         <!-- place.js fills the card from trip.js and the crawled campsite -->
         <div class="trip-card" id="trip-card">
