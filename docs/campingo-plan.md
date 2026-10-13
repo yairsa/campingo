@@ -2,7 +2,7 @@
 
 > **Open questions for Yair** (hand-kept): none open (§4.4's go-ahead answered 14/10/2026). His 13/10/2026 answers are in §1.
 
-**Status:** §4.2 and §4.3 built on branch `feat/campingo` (worktree `../wt-campingo`), all gates green, 14/10/2026. Next: §4.1 + §4.4 together (the rename lands with the merge).
+**Status:** done and live 14/10/2026 at https://yairsa.github.io/campingo/ (merge `235bb74`); the old address forwards. Left: Yair's backend deploy of the new `Code.gs`.
 
 ## 1. The brief (Yair, 13/10/2026)
 
@@ -37,11 +37,11 @@ Answers, 13/10/2026 (AskUserQuestion):
 ## 4. Tasks
 
 #### 4.1 Address: rename + forwarding
-- [ ] `gh repo rename campingo` (in the main checkout); confirm `git remote -v` points at `yairsa/campingo`; Pages serves `https://yairsa.github.io/campingo/`
-- [ ] Forwarding repo `yairsa/achziv-camping-calculator` (new, public, Pages on `main`): `index.html` + `admin.html` + `404.html` that replace `location` with the same path, query and hash under `/campingo/` (meta refresh as the no-JS fallback)
+- [x] `gh repo rename campingo` (in the main checkout); confirm `git remote -v` points at `yairsa/campingo`; Pages serves `https://yairsa.github.io/campingo/` (14/10/2026; the remote was updated by `gh`, Pages kept `main` /)
+- [x] Forwarding repo `yairsa/achziv-camping-calculator` (new, public, Pages on `main`): `index.html` + `admin.html` + `404.html` that replace `location` with the same path, query and hash under `/campingo/` (meta refresh as the no-JS fallback)
   - The page's source is `forwarder/index.html` in this repo (written 14/10/2026); publish it as all three files.
 - [x] `share.js` `LIVE`, `tests/tour.e2e.js`, `README.md`, `CLAUDE.md`, `backend/SETUP.md` point at the new address (on the branch)
-- [ ] Gate: old link `…/achziv-camping-calculator/#gear` lands on `…/campingo/#gear` (headless, live); a crawler run still pushes (`git push --dry-run` from the main checkout)
+- [x] Gate: old link `…/achziv-camping-calculator/#gear` lands on `…/campingo/#gear` (headless, live); a crawler run still pushes (`git push --dry-run` from the main checkout) — both passed 14/10/2026; the old `admin.html` forwards too
 
 #### 4.2 Home page
 - [x] Home view: `CampinGo` title, designed header (colors from `style.css` tokens, light + dark), the trip card from `TRIP` + `CAMPSITES`, the "no planned camping" state
@@ -68,6 +68,6 @@ Answers, 13/10/2026 (AskUserQuestion):
 #### 4.4 Land
 <Yair: Land it> The design is built and green on `feat/campingo` (screenshots sent 14/10/2026). Landing renames the repo, makes the old address forward, and puts the new home page live for the families. Land it, or change something first?
   - **Answered 14/10/2026 (AskUserQuestion): "Land it".**
-- [ ] Merge `feat/campingo` to `main` together with §4.1's rename; live check on the new address (home, a button, an old link forwarding)
-  - Then `Code.gs` on Yair's clipboard (the calc tour); his deploy.
-- [ ] Gate: live check passes; `docs/campsites-plan.md` and `CLAUDE.md` name the new address
+- [x] Merge `feat/campingo` to `main` together with §4.1's rename; live check on the new address (home, a button, an old link forwarding) — `235bb74`, live 14/10/2026: home shows חאן בארות 12/11 עד 14/11/2026, gear opens and → ראשי returns, old links forward
+  - `Code.gs` put on Yair's clipboard 14/10/2026 (the calc tour); his deploy. Until he deploys, the site shows the built-in calculator tour texts.
+- [x] Gate: live check passes; `docs/campsites-plan.md` and `CLAUDE.md` name the new address

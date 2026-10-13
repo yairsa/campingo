@@ -2,7 +2,7 @@
 
 > **Open questions for Yair** (hand-kept): none open. His 13/10/2026 answers are in §2.
 
-**Status:** §5.1–5.5 live 13/10/2026 (`28487c9`, after Yair's backend deploy; live check: the November trip, 18 campsites, the booking panel, the backend echoes `trip`). Next: §5.6.
+**Status:** §5.1–5.5 live 13/10/2026 (`28487c9`, after Yair's backend deploy; live check: the November trip, 18 campsites, the booking panel, the backend echoes `trip`). Next: §5.6. The site's address is https://yairsa.github.io/campingo/ since 14/10/2026 (`docs/campingo-plan.md`; the old one forwards).
 
 ## 1. The brief (Yair, 13/10/2026)
 
