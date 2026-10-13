@@ -468,9 +468,10 @@
   // After a successful save/load: let people keep name + code themselves (we cannot recover the code).
   function showKeep(c) {
     var url = /^https?:/.test(location.protocol) ? location.href.split('#')[0] : '';
-    var text = 'ההרשמה שלי לקמפינג באכזיב\nשם: ' + c.user + '\nקוד: ' + c.pin + (url ? '\n' + url : '');
+    var title = 'ההרשמה שלי לקמפינג' + (C.name ? ' ב' + C.name : '');   // C.name: the trip's campsite (prices.js)
+    var text = title + '\nשם: ' + c.user + '\nקוד: ' + c.pin + (url ? '\n' + url : '');
     document.getElementById('keep-wa').href = 'https://wa.me/?text=' + encodeURIComponent(text);
-    var subject = encodeURIComponent('ההרשמה שלי לקמפינג באכזיב'), body = encodeURIComponent(text);
+    var subject = encodeURIComponent(title), body = encodeURIComponent(text);
     // mailto does nothing on a computer with no mail app set up (typical when email lives in Gmail on the web),
     // so Gmail's compose page is offered as well.
     document.getElementById('keep-gmail').href = 'https://mail.google.com/mail/?view=cm&fs=1&su=' + subject + '&body=' + body;

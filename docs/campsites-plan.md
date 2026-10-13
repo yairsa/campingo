@@ -2,7 +2,7 @@
 
 > **Open questions for Yair** (hand-kept): none open. His 13/10/2026 answers are in §2.
 
-**Status:** crawler done and scheduled (§5.1–5.2, 13/10/2026). Next: the first unticked box in §5 (§5.3).
+**Status:** §5.1–5.5 built (13/10/2026). §5.3–5.5 live on branch `feat/trip-switch` only, waiting for Yair's backend deploy; then merge to `main`.
 
 ## 1. The brief (Yair, 13/10/2026)
 
@@ -91,7 +91,10 @@ Design (13/10/2026, refines the "Trip config" row in §3):
   - `trip.json` already names Beerot (box 1), so the branch's site is the November trip. The place tab says "עודכן ב-dd/MM HH:mm" from `CAMPSITES.checkedAt` and flags it past 3 days (checked with a shifted clock)
   - registration for November works only once stream A's backend is merged **and deployed by Yair**; until then the site says "השרת עוד לא עודכן"
   - merged stream A (`feat/trip-backend`). Activities: the backend's window was hardcoded to October and sent back as `trip`, which the site adopts; it is now the current trip's (`CAMP.tripFrom/tripTo`, generated), other trips' activities stay in the sheet unlisted, cache key `acts-v2`
-- [ ] Gate: all repo gates (CLAUDE.md) + `stamp.py`; 360px check
+- [x] Gate: all repo gates (CLAUDE.md) + `stamp.py`; 360px check
+  - 13/10/2026, after merging streams A, B and C into `feat/trip-switch`: all 16 gates green (incl. `campsites.e2e.js`, `booking.e2e.js`); the real Beerot page at 360px: no horizontal scroll on any of the 6 tabs, no page errors
+  - also: the welcome tour and the registration keep-text no longer say "באכזיב" (the old welcome text is in `TOUR_RETIRED_`)
+  - 🔴 **merge to `main` waits for Yair's backend deploy** of this branch's `Code.gs` (then the site and backend agree on `trip`)
 
 #### 5.4 Site: the חניונים explorer
 - [x] New tab: campsites by region, search, each card shows key facilities, adult/child price, the family's price for the calculator's composition and dates, Waze, the info page, and "בדיקת זמינות" (deep link)
@@ -104,16 +107,21 @@ Design (13/10/2026, refines the "Trip config" row in §3):
   - all green on `feat/explorer` (13/10/2026), including `tests/rtg.test.js` and `tools/trip.py --check`
 
 #### 5.5 Site: booking helper (imitate RTG registration)
-- [ ] Panel: families count → a composition row per family (engine bands, engine limits); split into orders of ≤4; one deep-link button per order; the snapshot's availability and price per order
-- [ ] "מילוי מהנרשמים": prefill from registered families (names + people per night from the public summary only)
+- [x] Panel: families count → a composition row per family (engine bands, engine limits); split into orders of ≤4; one deep-link button per order; the snapshot's availability and price per order
+  - `booking.js` / `booking.css`; rows = families (max 20), clamped to `RTG.LIMITS` (at least 1 adult); the form is kept in localStorage per trip
+  - the snapshot lists only the lodging types RTG offered, so a listed type counts as available and an empty list as "no availability"; a family whose composition equals a snapshot composition shows its regular total, otherwise an estimate nights x (adults x adult + children x child) from `rates`
+- [x] "מילוי מהנרשמים": prefill from registered families (names + people per night from the public summary only)
+  - the public summary has `families`, `names`, `nights` only: the count and names are filled (names only when `names.length === families`, as cancelled rows keep a name); the composition per family is NOT public, so it stays at 2 adults and the user splits it. The message says so. No new public data.
 - [x] Backend: `trip` field, a registrations tab per trip, Achziv rows = `achziv-2026-10`; tests; build; **Code.gs to Yair's clipboard; deploy is his** (code, tests and site done on `feat/trip-backend`; the clipboard and the deploy wait for the coordinator/Yair)
   - missing `trip` = Achziv; accepted = Achziv + `CAMP.tripId`, else `bad_trip`; every registration reply (errors too) echoes `trip`; Achziv stays in the tab `הרשמות`, another trip in `הרשמות <tripId>` made on first use (`sheetStore_(trip)`; `route` takes a store or a `trip -> store` function)
   - **past-trip rule: `adminFamilyUpdate` on a trip that is not the current one answers `past_trip`** (calc.js prices with the CURRENT trip's prices, so a re-save would silently re-rate October's family; cancel/unlock still work on any trip)
   - organizers' file: Achziv keeps its four tabs, another trip gets `<tab> <tripId>` (families, nights, summary); the activities tab stays single
   - site: `api()` adds `trip` to registration actions (GET summary as `?trip=`), storage keys are suffixed for non-Achziv trips; a reply without `trip` = old server: on a non-Achziv trip saving shows "השרת עוד לא עודכן" and nothing is sent (a write first probes the summary); Achziv on the old backend is unchanged. `admin.js` sends `trip` (the current trip, or `?trip=<id>`) and treats an echo-less family reply as "server not updated"
-  - still hardcoded: activities `TRIP = {from:'2026-10-06', to:'2026-10-13'}` in `Code.source.gs`; `DEFAULT_TRIP` (= Achziv) in `Code.source.gs` and `app.js`
-- [ ] e2e test for the panel (link format per order, the split at 5 families)
-- [ ] Gate: all repo gates; a deep link from the panel opens the real page with the right compositions (one headless check)
+  - ~~still hardcoded: activities `TRIP` in `Code.source.gs`~~ fixed in `bdf1563` (the current trip's window); `DEFAULT_TRIP` (= Achziv) in `Code.source.gs` and `app.js`
+- [x] e2e test for the panel (link format per order, the split at 5 families)
+  - `tests/booking.e2e.js`; the Achziv snapshot is injected, since `data/availability.js` only holds the current trip
+- [x] Gate: all repo gates; a deep link from the panel opens the real page with the right compositions (one headless check)
+  - live check 13/10: Beerot 12-14/11 with 2 compositions, headless Chrome with the crawler's desktop UA: the results page shows "סוג לינה 1: 2 מבוגרים ו -2 ילדים" and "סוג לינה 2: 2 מבוגרים, 3 ילדים ו -תינוק 1" (read-only)
 
 #### 5.6 Next
 - [ ] Crawl "מסלולים בסביבה" / family activities per campsite into the activities tab
