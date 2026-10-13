@@ -63,12 +63,14 @@ const calls = [];
   const browser = await chromium.launch({ executablePath: CHROME, headless: true });
   const page = await browser.newPage({ viewport: { width: 360, height: 780 } });
   await require('./pin-trip')(page);                                 // Achziv prices and dates (tests/pin-trip.js)
+  const famTrips = [];                                  // the `trip` of every registration request the page sent
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
   await page.route('https://fonts.googleapis.com/**', r => r.abort());
   await page.route('https://script.google.com/**', async (route) => {
     const body = JSON.parse(route.request().postData());
     calls.push(body.action + (body.kind ? ':' + body.kind : ''));
+    if (/^adminFamil/.test(body.action)) famTrips.push(body.trip);
     if (hangNext > 0) { hangNext--; return; }          // never answered (and never run): the page gives up and retries
     if (delay) await new Promise(r => setTimeout(r, delay));
     const res = oldBackend ? { ok: false, error: 'bad_request' } : P(ctx.route(body, rs, ts, as, adm));
@@ -308,6 +310,7 @@ const calls = [];
   assert.ok((await text(fam('Levi'))).includes('נעולה'));
   assert.ok((await text(fam('משפחת כהן'))).includes('06/10 עד 08/10 · 3 לנים'));
   await noHScroll('family list');
+  assert.ok(famTrips.length > 0 && famTrips.every(t => t === 'achziv-2026-10'), 'registration requests carry the trip: ' + famTrips);
 
   // ---- a family's stay through the calculator's pieces: headcount, dates, a warning, a second period ----
   await page.click(fam('משפחת כהן'));

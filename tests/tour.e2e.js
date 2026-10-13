@@ -19,6 +19,8 @@ const ts = { tips: () => [], comments: () => [], gear: () => [], addTip() {}, ad
   updateTip() {}, updateComment() {}, updateGear() {}, now: () => '30/09/2026 12:00' };
 // the sheet's הדרכה tab: null = the old script, which answers `tour` with bad_request
 let tourRows = null;
+const sent = [];            // every request body the page sent (a GET summary is recorded with its url)
+let stripTrip = false;      // true = the old backend: it ignores `trip` and never echoes it
 
 const url = 'file:///' + path.resolve(__dirname, '../index.html').replace(/\\/g, '/');
 const errors = [];
@@ -37,7 +39,8 @@ const errors = [];
     await c.route('https://script.google.com/**', (route) => {
       const req = route.request(), body = req.method() === 'POST' ? JSON.parse(req.postData()) : { action: 'summary' };
       let res;
-      if (/^(summary|save|load|delete)$/.test(body.action)) res = ctx.route(body, reg);
+      sent.push(Object.assign({ url: req.url() }, body));
+      if (/^(summary|save|load|delete)$/.test(body.action)) { res = ctx.route(body, reg); if (stripTrip) delete res.trip; }
       else if (/^(tips|gear)$/.test(body.action)) res = ctx.route(body, null, ts);
       else if (body.action === 'tour' && tourRows) res = ctx.route(body, null, { tour: () => tourRows });
       else res = { ok: false, error: 'bad_request' };
@@ -245,6 +248,55 @@ const errors = [];
   assert.ok(rows.length >= 2, 'the second family was not saved');
   await page.waitForTimeout(400);
   assert.ok(await page.isHidden('#share-dlg'), 'the modal a second time');
+
+  // ---- trips (campsites-plan §5.5): registration requests carry the site's trip; an old backend blocks saving ----
+  const BEEROT = 'beerot-2026-11';
+  async function beerotVisitor() {
+    const pg = await visitor('none');
+    await pg.context().addInitScript((id) => { window.CAMP.tripId = id; }, BEEROT);   // after the Achziv pin: the site is now Beerot's
+    return pg;
+  }
+  const saveAs = async (pg, user, pin) => {
+    await pg.fill('#reg-user', user); await pg.fill('#reg-pin', pin);
+    if (await pg.isVisible('#reg-pin2')) await pg.fill('#reg-pin2', pin);
+    await pg.click('#reg-save');
+  };
+  ctx.window.CAMP.tripId = BEEROT;                                      // the new backend accepts Beerot
+  sent.length = 0;
+  page = await beerotVisitor();
+  await page.goto(url + '?notour');
+  await page.waitForFunction(() => !document.getElementById('group-card').hidden, null, { timeout: 8000 });
+  assert.ok(sent.some(b => b.action === 'summary' && /[?&]trip=beerot-2026-11/.test(b.url)), 'the summary GET names the trip');
+  await saveAs(page, 'משפחת בארות', '2468');
+  await page.waitForFunction(() => /נרשמתם|עודכנה/.test(document.getElementById('reg-msg').textContent), null, { timeout: 15000 });
+  assert.ok(sent.filter(b => b.action === 'save').every(b => b.trip === BEEROT) && sent.some(b => b.action === 'save'), 'save carries the trip');
+  await page.fill('#reg-pin', '2468');
+  await page.click('#reg-load');
+  await page.waitForFunction(() => /נטענה/.test(document.getElementById('reg-msg').textContent), null, { timeout: 15000 });
+  assert.ok(sent.filter(b => b.action === 'load').every(b => b.trip === BEEROT) && sent.some(b => b.action === 'load'), 'load carries the trip');
+
+  // the old backend (no `trip` in any reply): the calculator works, saving says the server is not updated and sends nothing
+  stripTrip = true; sent.length = 0;
+  page = await beerotVisitor();
+  await page.goto(url + '?notour');
+  await page.waitForFunction(() => document.getElementById('reg-user'));
+  assert.ok(await page.isVisible('#reg-save'));
+  await saveAs(page, 'משפחת ישן', '1357');
+  await page.waitForFunction(() => /השרת עוד לא עודכן/.test(document.getElementById('reg-msg').textContent), null, { timeout: 15000 });
+  await page.waitForTimeout(300);
+  assert.strictEqual(sent.filter(b => b.action === 'save').length, 0, 'a save reached the old backend');
+  await page.click('#reg-save'); await page.waitForTimeout(300);
+  assert.strictEqual(sent.filter(b => b.action === 'save').length, 0, 'a second save reached the old backend');
+  assert.ok(!rows.some(r => r.user === 'משפחת ישן'));
+  // the Achziv site on the old backend keeps working (that backend is right for Achziv)
+  ctx.window.CAMP.tripId = 'achziv-2026-10';
+  page = await visitor('none');
+  await page.goto(url + '?notour');
+  await saveAs(page, 'משפחת אכזיב', '8642');
+  await page.waitForFunction(() => /נרשמתם|עודכנה/.test(document.getElementById('reg-msg').textContent), null, { timeout: 15000 });
+  assert.ok(rows.some(r => r.user === 'משפחת אכזיב'));
+  stripTrip = false;
+  console.log('trip e2e passed');
 
   // ---- texts edited in the sheet (docs/tour-plan.md §5.3): the next tour shows them, the open one keeps its text ----
   tourRows = JSON.parse(JSON.stringify(ctx.tourSeedRows_())).map(r => ({ tour: r[0], step: r[1], key: r[2], title: r[3], text: r[4] }));

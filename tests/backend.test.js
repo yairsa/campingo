@@ -1098,3 +1098,98 @@ console.log('admin add/delete tests passed');
   assert.ok(!/pinHash|"fails"|"1234"|"5555"/.test(JSON.stringify(replies)));
 }
 console.log('admin registration tests passed');
+
+// ---------- trips (campsites-plan §5.5): one registration tab per trip ----------
+{
+  const OLD = 'achziv-2026-10', NEW = 'beerot-2026-11', was = ctx.window.CAMP.tripId;
+  ctx.window.CAMP.tripId = NEW;                                        // the site now serves the Beerot trip
+  const tabs = {}, created = [];
+  const factory = (trip) => {                                          // sheetStore_(trip): a tab per trip, made on first use
+    const name = ctx.tripTab_(trip);
+    if (!tabs[name]) { tabs[name] = memStore(); created.push(name); }
+    return tabs[name];
+  };
+  const T = (req) => P(ctx.route(req, factory));
+  const mk = (user, pin, trip, nights) => Object.assign({ action: 'save', user, pin, nights, maxPeople: 2, full: 100, group: 90,
+    data: { base: { adult: 2 }, periods: [{ from: '2026-11-12', to: '2026-11-14', custom: false, counts: {} }] } }, trip === undefined ? {} : { trip });
+
+  assert.strictEqual(ctx.tripTab_(OLD), 'הרשמות');                       // Achziv: the existing tab, no migration
+  assert.strictEqual(ctx.tripTab_(NEW), 'הרשמות ' + NEW);
+
+  // a request without `trip` is an old client: Achziv's tab, and the reply says so
+  let r = T(mk('Cohen', '1234', undefined, { '2026-10-06': 2 }));
+  assert.ok(r.ok && r.created && r.trip === OLD);
+  assert.deepStrictEqual(created, ['הרשמות']);                          // nothing else was created
+  assert.strictEqual(T({ action: 'summary' }).trip, OLD);
+
+  // the same name + code in the new trip is a different family; its tab appears on first use
+  r = T(mk('Cohen', '1234', NEW, { '2026-11-12': 2, '2026-11-13': 2 }));
+  assert.ok(r.ok && r.created && r.trip === NEW);
+  assert.deepStrictEqual(created, ['הרשמות', 'הרשמות ' + NEW]);
+  assert.strictEqual(tabs['הרשמות'].rows.length, 1); assert.strictEqual(tabs['הרשמות ' + NEW].rows.length, 1);
+  assert.deepStrictEqual(T({ action: 'summary', trip: NEW }).nights, { '2026-11-12': 2, '2026-11-13': 2 });
+  assert.deepStrictEqual(T({ action: 'summary', trip: OLD }).nights, { '2026-10-06': 2 });   // October untouched
+
+  // an October code does not log in to November (a wrong code locks only its own trip)
+  T(mk('Levi', '5555', OLD, { '2026-10-07': 3 }));
+  r = T({ action: 'load', user: 'Levi', pin: '5555', trip: NEW });
+  assert.strictEqual(r.error, 'not_found'); assert.strictEqual(r.trip, NEW);
+  r = T(mk('Levi', '9999', NEW, { '2026-11-12': 1 }));                  // a NEW Levi with another code: allowed
+  assert.ok(r.ok && r.created);
+  assert.ok(T({ action: 'load', user: 'Levi', pin: '5555', trip: OLD }).ok);
+  assert.strictEqual(T({ action: 'load', user: 'Levi', pin: '5555', trip: NEW }).error, 'wrong_pin');
+  assert.ok(T({ action: 'load', user: 'Levi', pin: '9999', trip: NEW }).ok);
+  assert.strictEqual(T({ action: 'load', user: 'Levi', pin: '9999' }).error, 'wrong_pin');    // no trip = October
+  assert.ok(T({ action: 'delete', user: 'Levi', pin: '9999', trip: NEW }).ok);
+  assert.ok(T({ action: 'load', user: 'Levi', pin: '5555' }).ok);                              // October's Levi survives
+
+  // only the old trip and the current one; errors echo the trip, a rejected trip creates nothing
+  const before = created.length;
+  ['beerot-2027-01', 'x', 5, {}].forEach(trip => {
+    r = T(mk('Z', '1234', trip, { '2026-11-12': 1 }));
+    assert.strictEqual(r.error, 'bad_trip', String(trip)); assert.strictEqual(r.trip, undefined);
+  });
+  assert.strictEqual(T({ action: 'summary', trip: 'nope' }).error, 'bad_trip');
+  assert.strictEqual(created.length, before, 'a rejected trip must not create a tab');
+  assert.strictEqual(T({ action: 'load', user: 'Cohen', pin: '0000', trip: NEW }).trip, NEW);
+  assert.strictEqual(T({ action: 'nope' }).trip, undefined);
+
+  // managing page: lists a trip's own families; a past trip is not repriced
+  const logged = [], now = 5e12;
+  let orgs = {};
+  const adm = {
+    orgs: () => orgs, saveOrgs: (o) => { orgs = o; }, salt: () => 's',
+    hash: (salt, pw) => crypto.createHash('sha256').update(salt + '|' + pw).digest('hex'),
+    sign: (body) => crypto.createHmac('sha256', 'k').update(body).digest('hex'), nowMs: () => now,
+    log: (rows) => logged.push(...P(rows))
+  };
+  ctx.setAdminPassword_(adm, 'יאיר', 'password-1');
+  const tok = ctx.adminLogin_({ name: 'יאיר', password: 'password-1' }, adm).token;
+  const A = (req) => P(ctx.route(Object.assign({ token: tok }, req), factory, null, null, adm));
+  assert.deepStrictEqual(A({ action: 'adminFamilies', trip: NEW }).items.map(f => f.user), ['cohen']);
+  r = A({ action: 'adminFamilies', trip: OLD });
+  assert.deepStrictEqual(r.items.map(f => f.user), ['cohen', 'levi']); assert.strictEqual(r.trip, OLD);
+  assert.deepStrictEqual(A({ action: 'adminFamilies' }).items.map(f => f.user), ['cohen', 'levi']);   // no trip = Achziv
+  const stay = { base: { adult: 2 }, periods: [{ from: '2026-11-12', to: '2026-11-14', custom: false, counts: {} }] };
+  r = A({ action: 'adminFamilyUpdate', trip: NEW, user: 'cohen', data: stay });
+  assert.ok(r.ok && r.trip === NEW);                                    // the current trip is repriced by calc.js
+  const oct = tabs['הרשמות'].rows.find(x => x.user === 'cohen'), octBefore = JSON.stringify(oct);
+  assert.strictEqual(A({ action: 'adminFamilyUpdate', trip: OLD, user: 'cohen', data: stay }).error, 'past_trip');
+  assert.strictEqual(A({ action: 'adminFamilyUpdate', user: 'cohen', data: stay }).error, 'past_trip');   // no trip = Achziv
+  assert.strictEqual(JSON.stringify(oct), octBefore);                   // a past trip's stored price is untouched
+  assert.ok(A({ action: 'adminFamilyUnlock', trip: OLD, user: 'cohen' }).ok);                  // unlock works on any trip
+  assert.strictEqual(A({ action: 'adminFamilyCancel', trip: NEW, user: 'cohen' }).removed, true);
+  assert.strictEqual(tabs['הרשמות'].rows.length, 2); assert.strictEqual(tabs['הרשמות ' + NEW].rows.length, 0);
+  assert.strictEqual(A({ action: 'adminFamilyUpdate', trip: 'nope', user: 'cohen', data: stay }).error, 'bad_trip');
+
+  // organizers' sheet: Achziv keeps its tab names, another trip gets its own set (the activities tab stays single)
+  assert.deepStrictEqual(P(ctx.orgTabs_(OLD)), P(ctx.ORG_TABS));
+  const nt = P(ctx.orgTabs_(NEW));
+  assert.strictEqual(nt.families, ctx.ORG_TABS.families + ' ' + NEW); assert.strictEqual(nt.acts, ctx.ORG_TABS.acts);
+
+  // when the site's own trip is Achziv (the October site), the Beerot trip is not accepted
+  ctx.window.CAMP.tripId = OLD;
+  assert.strictEqual(T({ action: 'summary', trip: NEW }).error, 'bad_trip');
+  ctx.window.CAMP.tripId = was;
+}
+console.log('trip tests passed');

@@ -337,9 +337,18 @@
     locked: 'יותר מדי ניסיונות עם קוד שגוי. ההרשמה נעולה ל-15 דקות — נסו שוב אחר כך, או פנו למארגנים.',
     not_found: 'לא מצאנו הרשמה בשם הזה.',
     too_big: 'יותר מדי נתונים — נסו לצמצם את מספר התקופות.',
-    network: 'אין חיבור לשרת כרגע. נסו שוב בעוד רגע.'
+    network: 'אין חיבור לשרת כרגע. נסו שוב בעוד רגע.',
+    old_server: 'השרת עוד לא עודכן'
   };
-  var REG_KEY = 'achziv-registered';   // the name this device last saved or loaded successfully
+  // Trips (campsites-plan §5.5): every registration request carries the trip id. Achziv (October 2026) is the
+  // trip the old backend already serves; a backend that answers a request without echoing `trip` is old, which is
+  // fine for Achziv but means any other trip must not be saved (it would overwrite October's row).
+  var TRIP = C.tripId || '', DEFAULT_TRIP = 'achziv-2026-10';
+  var SFX = TRIP && TRIP !== DEFAULT_TRIP ? '-' + TRIP : '';   // Achziv keeps its old storage keys
+  var REG_ACTIONS = { save: 1, load: 1, 'delete': 1, summary: 1, saveActivity: 1, deleteActivity: 1, join: 1, leave: 1 };
+  var WRITE_ACTIONS = { save: 1, 'delete': 1, saveActivity: 1, deleteActivity: 1, join: 1, leave: 1 };
+  var serverOld = null;          // null = not known yet, true = the backend does not know trips, false = it does
+  var REG_KEY = 'achziv-registered' + SFX;   // the name this device last saved or loaded successfully
   var names = [];                      // registered names, from the summary (for the dropdown)
   var signedIn = null;                 // name loaded/saved in this page visit, with the right code
   function norm(u) { return String(u || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
@@ -349,18 +358,42 @@
   // Google's web-app reply step fails intermittently (measured 30/09/2026: ~1 in 3 requests got a 404
   // page after the script had already run). Every action is safe to repeat, so retry until a JSON reply.
   function api(body, attempt) {
+    if (attempt) return rawApi(body, attempt);
+    var act = body ? body.action : 'summary';
+    if (!TRIP || !REG_ACTIONS[act]) return rawApi(body, attempt);
+    if (body && !body.trip) body.trip = TRIP;
+    var oldMsg = { ok: false, error: 'old_server' };
+    if (serverOld && TRIP !== DEFAULT_TRIP) return Promise.resolve(oldMsg);                  // nothing is sent again
+    function run() { return rawApi(body, attempt).then(function (res) { return noteTrip(res) && TRIP !== DEFAULT_TRIP ? oldMsg : res; }); }
+    if (serverOld === null && WRITE_ACTIONS[act] && TRIP !== DEFAULT_TRIP) {
+      // never send a write to a backend that might not know trips: ask it first (the summary echoes `trip`)
+      return rawApi(null).then(function (s) {
+        if (!s || !s.ok) return { ok: false, error: 'network' };
+        return noteTrip(s) ? oldMsg : run();
+      });
+    }
+    return run();
+  }
+  // true when this reply shows an old backend (an ok reply that does not echo `trip`)
+  function noteTrip(res) {
+    if (!res || !res.ok) return false;
+    serverOld = res.trip == null;
+    return serverOld;
+  }
+  function rawApi(body, attempt) {
     attempt = attempt || 1;
-    return fetch(C.apiUrl, { method: body ? 'POST' : 'GET', headers: body ? { 'Content-Type': 'text/plain;charset=utf-8' } : undefined,
+    var url = C.apiUrl + (!body && TRIP ? '?trip=' + encodeURIComponent(TRIP) : '');
+    return fetch(url, { method: body ? 'POST' : 'GET', headers: body ? { 'Content-Type': 'text/plain;charset=utf-8' } : undefined,
                              body: body ? JSON.stringify(body) : undefined,
                              keepalive: !!body })       // a send still completes if the page is closed
       .then(function (r) { return r.json(); })
       .catch(function () {
         if (attempt >= 4) return { ok: false, error: 'network' };
         return new Promise(function (res) { setTimeout(res, 400 * attempt); })
-          .then(function () { return api(body, attempt + 1); })
+          .then(function () { return rawApi(body, attempt + 1); })
           .then(function (res) {
             // the first try may have deleted it and only the reply was lost
-            if (body && body.action === 'delete' && res.error === 'not_found') return { ok: true, summary: null };
+            if (body && body.action === 'delete' && res.error === 'not_found') return { ok: true, summary: null, trip: body.trip };
             return res;
           });
       });
@@ -397,7 +430,7 @@
   function busy(on) { document.querySelectorAll('#reg-form button').forEach(function (b) { b.disabled = on; }); }
 
   // The group table is shown at once from this browser's last copy, then replaced by the fresh one.
-  var SUM_KEY = 'achziv-summary-cache';
+  var SUM_KEY = 'achziv-summary-cache' + SFX;
   function renderGroup(sum, cached) {
     if (!sum || !sum.ok) return;
     if (!cached) try { localStorage.setItem(SUM_KEY, JSON.stringify(sum)); } catch (e) { /* ignore */ }
@@ -557,12 +590,12 @@
         signedIn = null;
         document.getElementById('reg-keep').hidden = true;
         regMsg('ההרשמה בוטלה.', 'good');
-        if (res.summary) renderGroup(res.summary); else api(null).then(function (s) { renderGroup(s); });
+        if (res.summary) renderGroup(res.summary); else api(null).then(function (s) { if (!s || s.error !== 'old_server') renderGroup(s); });
       });
     });
 
     try { renderGroup(JSON.parse(localStorage.getItem(SUM_KEY)), true); } catch (e) { /* no copy yet */ }
-    api(null).then(function (s) { renderGroup(s); });
+    api(null).then(function (s) { if (!s || s.error !== 'old_server') renderGroup(s); });
   }
 
   renderPriceTable();
