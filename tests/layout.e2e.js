@@ -28,7 +28,7 @@ const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application
   // ---- the home page: the brand, the next trip, the hive ----
   await page.goto(url);
   await atHome();
-  assert.strictEqual(await page.textContent('#home-title'), 'CampinGo');
+  assert.strictEqual(await page.getByRole('heading', { level: 1, name: 'CampinGo', exact: true }).count(), 1);   // the wordmark is an SVG: its accessible name
   assert.strictEqual(await page.title(), 'CampinGo · פארק אכזיב - אוקטובר 2026');
   assert.strictEqual(await page.textContent('#trip-kicker'), 'הקמפינג הבא');
   assert.strictEqual(await page.textContent('#trip-name'), 'גן לאומי אכזיב');
