@@ -1,6 +1,7 @@
 // Run: node tests/campsites.e2e.js — the חניונים explorer in headless Chrome at 360px (docs/campsites-plan.md §5.4).
 // Pinned to the Achziv trip (tests/pin-trip.js); every https URL is aborted, so nothing leaves the machine.
 // Needs playwright-core (PLAYWRIGHT_CORE=<path>, default: the website repo's copy) and installed Chrome (CHROME=<path>).
+const openView = require('./open-view');
 const assert = require('assert'), path = require('path');
 const { chromium } = require(process.env.PLAYWRIGHT_CORE || 'C:/YairSahar_Business/ParentingUpClose_Website/node_modules/playwright-core');
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
@@ -19,7 +20,7 @@ const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application
   const q = (s) => new URL(s).searchParams;
 
   await page.goto(url);
-  await page.click('#tab-sites');
+  await openView(page, 'sites');
   assert.ok(await page.isVisible('#panel-sites') && await page.isHidden('#panel-calc'));
 
   // 18 cards in three regions; the trip's campsite (Achziv, 23) leads its region and is marked
@@ -54,10 +55,10 @@ const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application
   assert.strictEqual(await page.locator('#sites-list .site').count(), 18);
 
   // a composition change in the calculator reprices the cards: 2 adults + 3 children + 1 toddler
-  await page.click('#tab-calc');
+  await openView(page, 'calc');
   const inputs = page.locator('#base-main input');
   await inputs.nth(1).fill('3'); await inputs.nth(2).fill('1');
-  await page.click('#tab-sites');
+  await openView(page, 'sites');
   assert.strictEqual((await card(23).locator('.site-est').innerText()).replace(/\D/g, ''), '1304', 'the estimate did not follow the composition');   // 4 x (2x76 + 3x58)
   assert.ok((await page.innerText('#sites-family')).includes('2 מבוגרים, 3 ילדים, 1 פעוטות'), await page.innerText('#sites-family'));
 
@@ -70,9 +71,9 @@ const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application
   assert.strictEqual(q(await card(13).locator('.site-avail').getAttribute('href')).get('hotel'), '13');
 
   // changing the dates in the calculator moves the link too
-  await page.click('#tab-calc');
+  await openView(page, 'calc');
   await page.locator('#periods select').nth(1).selectOption('2026-10-08');
-  await page.click('#tab-sites');
+  await openView(page, 'sites');
   const p2 = q(await card(23).locator('.site-avail').getAttribute('href'));
   assert.deepStrictEqual([p2.get('in'), p2.get('out')], ['2026-10-06', '2026-10-08']);
 

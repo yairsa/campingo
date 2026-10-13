@@ -17,8 +17,3 @@
   display: block; width: 100%; font: inherit; color: var(--text); background: var(--card);
   border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; margin-top: 4px;
 }
-/* six tabs, "מחשבון לינה" first, still fit at 360px (style.css fitted five) */
-@media (max-width: 420px) {
-  .tabs { padding-inline: 6px; gap: 1px; }
-  .tabs button { padding: 10px 3px; font-size: 14px; }
-}

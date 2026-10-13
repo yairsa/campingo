@@ -2,6 +2,7 @@
 // Node's vm (the Google URL is mocked, so nothing reaches the live sheet). Pick → pack → own item → approve in the
 // "sheet" → merged; the starter list before the server answers; the old live script.
 // Needs playwright-core (PLAYWRIGHT_CORE=<path>, default: the website repo's copy) and installed Chrome (CHROME=<path>).
+const openView = require('./open-view');
 const assert = require('assert'), fs = require('fs'), vm = require('vm'), path = require('path');
 const { chromium } = require(process.env.PLAYWRIGHT_CORE || 'C:/YairSahar_Business/ParentingUpClose_Website/node_modules/playwright-core');
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
@@ -48,13 +49,12 @@ let ts = store(), gearOverride = null, oldBackend = false, dropNext = 0, delay =
   const top = (sel) => page.evaluate((s) => document.querySelector(s).getBoundingClientRect().top, sel);
   const mineKeys = () => page.locator('#gear-mine-list li').evaluateAll(ls => ls.map(l => l.getAttribute('data-key')));
 
-  // ---- prefetched in the background; the tab bar fits at 360px ----
+  // ---- prefetched in the background ----
   await page.goto(url);
   await page.waitForTimeout(3000);
   assert.ok(calls.includes('gear'), 'gear list not prefetched');
   assert.ok(await page.isHidden('#panel-gear'), 'prefetch should not switch tabs');
-  { const tw = await page.evaluate(() => { const t = document.querySelector('.tabs'); return [t.scrollWidth, t.clientWidth, [...t.children].map(c => c.offsetWidth)]; }); assert.ok(tw[0] <= tw[1], 'the tab bar overflows at 360px: ' + JSON.stringify(tw)); }
-  await page.click('#tab-gear');
+  await openView(page, 'gear');
   assert.strictEqual(await text('#gear-count'), SEED.length + ' פריטים ברשימה הכללית.');
   assert.strictEqual(await text('#gear-view-mine'), 'הרשימה שלי (0)');
   const openSecs = () => page.locator('#gear-pick-list details[open]').count();
@@ -158,7 +158,7 @@ let ts = store(), gearOverride = null, oldBackend = false, dropNext = 0, delay =
   rows[0].status = ST.approved; rows[0].section = 'ציוד כללי';
   ts.gear()[1].status = ST.hidden;                                // and one seed item hidden
   await page.reload();
-  await page.click('#tab-gear');
+  await openView(page, 'gear');
   await page.waitForFunction((id) => document.querySelector('#gear-mine-list li[data-key="g' + id + '"], #gear-pick-list li[data-key="g' + id + '"]'), rows[0].id, { timeout: 5000 });
   await page.click('#gear-view-mine');
   keys = await mineKeys();
@@ -186,7 +186,7 @@ let ts = store(), gearOverride = null, oldBackend = false, dropNext = 0, delay =
   delay = 3000;
   const t1 = Date.now();
   await page.reload();
-  await page.click('#tab-gear');
+  await openView(page, 'gear');
   assert.strictEqual(await text('#gear-count'), SEED.length + ' פריטים ברשימה הכללית.');
   assert.ok(Date.now() - t1 < 2500, 'the starter list waited for the server');
   delay = 0;
@@ -196,7 +196,7 @@ let ts = store(), gearOverride = null, oldBackend = false, dropNext = 0, delay =
   oldBackend = true;
   await page.evaluate(() => localStorage.clear());
   await page.reload();
-  await page.click('#tab-gear');
+  await openView(page, 'gear');
   await page.waitForTimeout(600);
   assert.strictEqual(await text('#gear-count'), SEED.length + ' פריטים ברשימה הכללית.');
   await page.selectOption('#gear-new-sec', 'שונות');
@@ -206,12 +206,12 @@ let ts = store(), gearOverride = null, oldBackend = false, dropNext = 0, delay =
   assert.ok((await text('#gear-pick-list')).includes('מחכה בתור'));
   assert.ok(await page.locator('#gear-pick-list .sending').count() === 1, 'the own item should wait, still sending');
   await page.reload();
-  await page.click('#tab-gear');
+  await openView(page, 'gear');
   assert.ok((await page.textContent('#gear-pick-list')).includes('מחכה בתור'), 'unsent own item lost on reload');
   // the new script arrives: the waiting item is sent on the next visit
   oldBackend = false;
   await page.reload();
-  await page.click('#tab-gear');
+  await openView(page, 'gear');
   await page.waitForFunction(() => /הוצע למארגן/.test(document.getElementById('gear-pick-list').textContent), null, { timeout: 15000 });
   assert.strictEqual(ts.gear().filter(g => g.name === 'מחכה בתור').length, 1);
   // an own item can be removed from the list
@@ -229,7 +229,7 @@ let ts = store(), gearOverride = null, oldBackend = false, dropNext = 0, delay =
       body: { action: 'submitGear', clientId: 'old-client-1', section: 'אוהלים ולינה', name: 'פריט ישן', hp: '' } }] }));
   }, LS);
   await page.reload();
-  await page.click('#tab-gear');
+  await openView(page, 'gear');
   assert.strictEqual(await text('#gear-view-mine'), 'הרשימה שלי (3)');
   await page.waitForFunction(() => /הוצע למארגן/.test(document.getElementById('gear-pick-list').textContent), null, { timeout: 15000 });
   assert.strictEqual(ts.gear().find(g => g.clientId === 'old-client-1').section, 'אוהלים ומחנה', 'an old section name reached the sheet');
@@ -294,7 +294,7 @@ let ts = store(), gearOverride = null, oldBackend = false, dropNext = 0, delay =
   assert.deepStrictEqual([await val('g16', noa), await val('g16', yoav)], ['4', '4']);
   await type('g16', noa, 0);                                       // a member who does not need it
   // a redraw keeps all of it
-  await page.reload(); await page.click('#tab-gear'); await page.click('#gear-expand');
+  await page.reload(); await openView(page, 'gear'); await page.click('#gear-expand');
   assert.deepStrictEqual([await val('g16', noa), await val('g16', yoav), await val('g10')], ['0', '4', '7']);
 
   // ---- packing: one row per item, a box per member; a member's own list ----
@@ -350,19 +350,19 @@ let ts = store(), gearOverride = null, oldBackend = false, dropNext = 0, delay =
 
   // ---- §5.5: a tick on a split item carries to its parts, once; a hidden item's tick moves ----
   await page.evaluate((k) => localStorage.setItem(k, JSON.stringify({ picked: { 29: 1, 63: 1 } })), LS);
-  await page.reload(); await page.click('#tab-gear');
+  await page.reload(); await openView(page, 'gear');
   st = await saved();
   assert.deepStrictEqual(Object.keys(st.picked).map(Number).sort((a, b) => a - b), [29, 63, 82, 1031, 1032]);
   assert.strictEqual(st.carried, 1);
   await page.click('#gear-view-pick'); await page.click('#gear-expand'); await page.uncheck('#gp-g1031');
-  await page.reload(); await page.click('#tab-gear');
+  await page.reload(); await openView(page, 'gear');
   assert.ok(!(await saved()).picked[1031], 'the carry ran twice');
   assert.strictEqual(await page.locator('#gp-g63').count(), 0, 'a hidden item is listed');
 
   // the live script before the 04/10 version: the add form offers only the sections it accepts
   gearOverride = { ok: true, sections: ['אוהלים ולינה', 'ביגוד', 'שונות', 'נכתב ביד'], items: [{ id: 1, section: 'אוהלים ולינה', name: 'אוהל', tags: [], note: '' }] };
   await page.evaluate(() => localStorage.removeItem('achziv-gear-cache'));
-  await page.reload(); await page.click('#tab-gear');
+  await page.reload(); await openView(page, 'gear');
   await page.waitForFunction(() => document.getElementById('gear-count').textContent.startsWith('1 '), null, { timeout: 5000 }).catch(() => {});
   const opts = await page.locator('#gear-new-sec option').evaluateAll(o => o.map(x => x.value).filter(Boolean));
   assert.deepStrictEqual(opts, ['אוהלים ולינה', 'ביגוד', 'שונות'], 'form sections: ' + opts);

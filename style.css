@@ -14,6 +14,9 @@
   --t-all-bg: #e3f0eb; --t-all-line: #1d6b57; --t-all-ink: #1d6b57;
   --t-adult-bg: #e6edf8; --t-adult-line: #3b62a3; --t-adult-ink: #2d4f87;
   --t-kid-bg: #fdeccf; --t-kid-line: #b86a0b; --t-kid-ink: #8a4d00;
+  /* CampinGo: the home page's hero and hive */
+  --hero-a: #1d6b57; --hero-b: #2f8f74; --sun: #f2a531; --hero-ink: #ffffff;
+  --hex: #1d6b57; --hex-hi: #237d66; --hex-gen: #8a5a2b; --hex-gen-hi: #9c6834; --hex-ink: #ffffff;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -23,6 +26,8 @@
     --t-all-bg: #1f3a31; --t-all-line: #6cc4a8; --t-all-ink: #8fdcc0;
     --t-adult-bg: #1e2b40; --t-adult-line: #8fb4ee; --t-adult-ink: #a9c6f5;
     --t-kid-bg: #3d2c10; --t-kid-line: #f0a94a; --t-kid-ink: #ffc780;
+    --hero-a: #1f3a31; --hero-b: #2b5546; --sun: #f0a94a; --hero-ink: #ecefec;
+    --hex: #2a6b58; --hex-hi: #317a65; --hex-gen: #6b4a2a; --hex-gen-hi: #7a5532; --hex-ink: #ecefec;
   }
 }
 :root[data-theme="dark"] {
@@ -32,6 +37,8 @@
     --t-all-bg: #1f3a31; --t-all-line: #6cc4a8; --t-all-ink: #8fdcc0;
     --t-adult-bg: #1e2b40; --t-adult-line: #8fb4ee; --t-adult-ink: #a9c6f5;
     --t-kid-bg: #3d2c10; --t-kid-line: #f0a94a; --t-kid-ink: #ffc780;
+    --hero-a: #1f3a31; --hero-b: #2b5546; --sun: #f0a94a; --hero-ink: #ecefec;
+    --hex: #2a6b58; --hex-hi: #317a65; --hex-gen: #6b4a2a; --hex-gen-hi: #7a5532; --hex-ink: #ecefec;
 }
 
 * { box-sizing: border-box; }
@@ -50,23 +57,21 @@ a { color: var(--accent); }
 .skip { position: absolute; inset-inline-start: -999px; }
 .skip:focus { inset-inline-start: 16px; top: 8px; background: var(--card); padding: 8px; z-index: 9; }
 
-/* tabs */
-/* The row's line is an inset shadow, not a border, and the active tab's underline sits over it inside the row:
-   anything below the row's box made it scroll up and down (a small vertical scrollbar on desktop). */
-.tabs { display: flex; gap: 4px; box-shadow: inset 0 -2px 0 var(--line); overflow-x: auto; overflow-y: hidden;
+/* the bar on top of a view: "→ ראשי" and the view's name (app.js; docs/campingo-plan.md §3) */
+/* Its line is an inset shadow, not a border: anything below the bar's box made it scroll (a small vertical scrollbar). */
+.tabs { display: flex; align-items: center; gap: 12px; box-shadow: inset 0 -2px 0 var(--line); padding-block: 8px;
   position: sticky; top: 0; z-index: 5; background: var(--bg); }
-/* anything scrolled into view lands below the fixed tab row */
+.tabs[hidden] { display: none; }
+.tabs .btn-secondary { width: auto; border-style: solid; background: var(--card); padding: 6px 12px; white-space: nowrap; }
+#view-title { font-size: 1.25rem; margin: 0; }
+#view-title:focus { outline: none; }
+/* anything scrolled into view lands below the fixed bar */
 .card, [id] { scroll-margin-top: calc(var(--tabs-h, 48px) + 12px); }
 #panel-calc .card, #panel-calc [id] { scroll-margin-top: calc(var(--tabs-h, 48px) + 68px); }
-/* the calculator's fixed bar (מחירון / ✕), right under the tab row */
+/* the calculator's fixed bar (מחירון / ✕), right under the bar on top */
 .subbar { position: sticky; top: var(--tabs-h, 48px); z-index: 4; background: var(--bg); padding: 8px 0; margin-bottom: 8px; }
 .subbar .btn-secondary { width: auto; border-style: solid; background: var(--card); }
 #calc-main[hidden], #calc-prices[hidden] { display: none; }
-.tabs button {
-  font: inherit; font-weight: 600; background: none; border: 0; color: var(--muted);
-  padding: 10px 14px; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap;
-}
-.tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
 main { padding-top: 16px; padding-bottom: 24px; }
 
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
@@ -407,8 +412,6 @@ p.awho { border: 0; padding: 0; }
 @media (max-width: 520px) {
   body { font-size: 16px; }
   h1 { font-size: 1.4rem; }
-  .tabs { gap: 2px; }
-  .tabs button { padding: 10px 5px; font-size: 15px; }   /* the five tabs, "מחשבון לינה" first, fit at 360px */
   .facilities { columns: 1; }
   .facts { grid-template-columns: 1fr; }
   .facts dd { margin-bottom: 6px; }
@@ -418,15 +421,61 @@ p.awho { border: 0; padding: 0; }
   body { background: #fff; }
 }
 
-/* header tools: share + the tour's ? (tour.js, share.js) */
-.top { position: relative; }
-.top-tools { display: flex; gap: 8px; align-items: center; margin: -8px 0 12px; position: relative; }
+/* the brand bar: CampinGo, share, the tour's ? (tour.js, share.js) */
+.top { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-block: 10px; }
+.brand { display: inline-flex; align-items: center; gap: 8px; color: var(--text); text-decoration: none; font-weight: 700; font-size: 1.3rem; }
+.brand-name span { color: var(--accent); }
+.brand-logo { width: 32px; height: 32px; }
+body[data-view="home"] .brand { visibility: hidden; }          /* the hero says it, bigger */
+.top-tools { display: flex; gap: 8px; align-items: stretch; position: relative; }
 .top-tools .btn-secondary { width: auto; border-style: solid; background: var(--card); padding: 6px 12px; }
 #tour-help { min-width: 40px; font-weight: 700; }
-.top-tools { align-items: stretch; }
-.top-tools .nav-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 40px; }
+.top-tools .nav-btn, .trip-nav .nav-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 40px; }
 .nav-logo { width: 20px; height: 20px; flex: none; }
-.share-menu { position: absolute; top: calc(100% + 6px); inset-inline-start: 0; z-index: 8; background: var(--card);
+
+/* ---- the home page: the hero with the next trip, then the hive ---- */
+#home[hidden] { display: none; }
+.hero { position: relative; overflow: hidden; border-radius: 20px; padding: 22px 18px 18px; margin-bottom: 18px;
+  color: var(--hero-ink); background: linear-gradient(160deg, var(--hero-a), var(--hero-b)); }
+.hero::after { content: ""; position: absolute; inset-inline-end: -40px; top: -40px; width: 150px; height: 150px; border-radius: 50%;
+  background: radial-gradient(circle, var(--sun) 0 34%, transparent 35%); opacity: .9; pointer-events: none; }
+.hero > * { position: relative; z-index: 1; }
+#home-title { font-size: 2.4rem; line-height: 1.1; margin: 0; letter-spacing: .5px; direction: ltr; text-align: right; }
+.tagline { margin: 4px 0 16px; opacity: .92; }
+.trip-card { background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .28); border-radius: 14px; padding: 14px; }
+.trip-card p, .trip-card h2 { margin: 0; }
+.trip-kicker { font-size: .9rem; font-weight: 600; opacity: .9; }
+.trip-name { font-size: 1.45rem; margin: 2px 0 2px; }
+.trip-when { font-weight: 700; font-size: 1.1rem; margin-top: 6px !important; }
+.trip-nav { display: flex; gap: 8px; margin-top: 12px; }
+.trip-nav[hidden] { display: none; }
+.trip-nav .btn-secondary { width: auto; padding: 6px 14px; background: #fff; border: 1px solid transparent; }
+
+/* the hive: pointy-top hexagons in rows of 3, the next row centred, so it sits in the first row's gaps.
+   The clip-path is on the button itself, so the corners outside the hexagon are not clickable (the rows overlap). */
+.hive-wrap { --hw: 104px; --hh: calc(var(--hw) * 1.1547); --hg: 6px; margin: 0 auto 18px; }
+.hive-wrap[hidden] { display: none; }
+.hive-title { text-align: center; font-size: 1rem; color: var(--muted); margin: 6px 0 10px; }
+.hive { list-style: none; margin: 0 auto; padding: 0 0 calc(var(--hh) * .25); display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 0 var(--hg); max-width: calc(var(--hw) * 3 + var(--hg) * 2); }
+.hive li { margin-bottom: calc(var(--hh) * -.25 + var(--hg)); }
+.hex { --c: var(--hex); --c-hi: var(--hex-hi); position: relative; isolation: isolate; width: var(--hw); height: var(--hh);
+  border: 0; padding: 0 12px; cursor: pointer; font: inherit; color: var(--hex-ink); background: var(--c);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center;
+  transition: background-color .15s, transform .15s; }
+#hive-general .hex { --c: var(--hex-gen); --c-hi: var(--hex-gen-hi); }
+.hex:hover { background: var(--c-hi); transform: scale(1.04); }
+.hex svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.hex span { font-weight: 700; font-size: .95rem; line-height: 1.15; }
+/* focus: the outline would be clipped, so the ring is the hexagon's own edge in the focus colour */
+.hex:focus-visible { outline: none; background: var(--focus); }
+.hex:focus-visible::before { content: ""; position: absolute; inset: 4px; z-index: -1; background: var(--c);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+@media (min-width: 600px) { .hive-wrap { --hw: 132px; --hg: 8px; } .hex svg { width: 36px; height: 36px; } .hex span { font-size: 1.05rem; } }
+@media (prefers-reduced-motion: reduce) { .hex { transition: none; } .hex:hover { transform: none; } }
+
+.share-menu { position: absolute; top: calc(100% + 6px); inset-inline-end: 0; z-index: 8; background: var(--card);
   border: 1px solid var(--line); border-radius: 10px; padding: 10px; box-shadow: 0 6px 20px rgba(0, 0, 0, .18);
   width: max-content; max-width: calc(100vw - 32px); }
 .share-menu[hidden] { display: none; }
