@@ -1,0 +1,259 @@
+window.AVAILABILITY = {
+  "checkedAt": "2026-10-13T18:14:47+03:00",
+  "results": {
+    "13|2026-11-12|2026-11-14": {
+      "checkedAt": "2026-10-13T18:14:47+03:00",
+      "comps": [
+        {
+          "comp": {
+            "adults": 2,
+            "children": 2,
+            "infants": 0
+          },
+          "lodging": [
+            {
+              "name": "לינת שטח באוהלים פרטיים",
+              "fromPerNight": 166,
+              "rates": [
+                {
+                  "label": "לינת שטח באוהלים פרטיים - מחיר רגיל",
+                  "total": 444
+                },
+                {
+                  "label": "לינת שטח באוהלים פרטיים - מחיר מנוי מטמון",
+                  "total": 332
+                },
+                {
+                  "label": "לינת שטח באוהלים פרטיים - מחיר משרת מילואים פעיל",
+                  "total": 376
+                },
+                {
+                  "label": "לינת שטח באוהלים פרטיים - מחיר חייל בשירות חובה ושירות לאומי",
+                  "total": 376
+                }
+              ]
+            },
+            {
+              "name": "מאהל גדול קבוע מחיצה 02",
+              "fromPerNight": 860,
+              "rates": [
+                {
+                  "label": "מאהל גדול קבוע",
+                  "total": 1720
+                }
+              ]
+            },
+            {
+              "name": "מאהל גדול קבוע מחיצה 03",
+              "fromPerNight": 860,
+              "rates": [
+                {
+                  "label": "מאהל גדול קבוע",
+                  "total": 1720
+                }
+              ]
+            },
+            {
+              "name": "מאהל גדול קבוע מחיצה 04",
+              "fromPerNight": 860,
+              "rates": [
+                {
+                  "label": "מאהל גדול קבוע",
+                  "total": 1720
+                }
+              ]
+            },
+            {
+              "name": "מאהל גדול קבוע מחיצה 05",
+              "fromPerNight": 860,
+              "rates": [
+                {
+                  "label": "מאהל גדול קבוע",
+                  "total": 1720
+                }
+              ]
+            },
+            {
+              "name": "מאהל גדול קבוע מחיצה 06",
+              "fromPerNight": 860,
+              "rates": [
+                {
+                  "label": "מאהל גדול קבוע",
+                  "total": 1720
+                }
+              ]
+            }
+          ],
+          "soldOutHint": false,
+          "url": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=13&in=2026-11-12&out=2026-11-14&rooms=1&ad1=2&ch1=2&inf1=0"
+        },
+        {
+          "comp": {
+            "adults": 2,
+            "children": 3,
+            "infants": 0
+          },
+          "lodging": [
+            {
+              "name": "לינת שטח באוהלים פרטיים",
+              "fromPerNight": 201,
+              "rates": [
+                {
+                  "label": "לינת שטח באוהלים פרטיים - מחיר רגיל",
+                  "total": 538
+                },
+                {
+                  "label": "לינת שטח באוהלים פרטיים - מחיר מנוי מטמון",
+                  "total": 402
+                },
+                {
+                  "label": "לינת שטח באוהלים פרטיים - מחיר משרת מילואים פעיל",
+                  "total": 456
+                },
+                {
+                  "label": "לינת שטח באוהלים פרטיים - מחיר חייל בשירות חובה ושירות לאומי",
+                  "total": 470
+                }
+              ]
+            },
+            {
+              "name": "מאהל גדול קבוע מחיצה 02",
+              "fromPerNight": 860,
+              "rates": [
+                {
+                  "label": "מאהל גדול קבוע",
+                  "total": 1720
+                }
+              ]
+            },
+            {
+              "name": "מאהל גדול קבוע מחיצה 03",
+              "fromPerNight": 860,
+              "rates": [
+                {
+                  "label": "מאהל גדול קבוע",
+                  "total": 1720
+                }
+              ]
+            },
+            {
+              "name": "מאהל גדול קבוע מחיצה 04",
+              "fromPerNight": 860,
+              "rates": [
+                {
+                  "label": "מאהל גדול קבוע",
+                  "total": 1720
+                }
+              ]
+            },
+            {
+              "name": "מאהל גדול קבוע מחיצה 05",
+              "fromPerNight": 860,
+              "rates": [
+                {
+                  "label": "מאהל גדול קבוע",
+                  "total": 1720
+                }
+              ]
+            },
+            {
+              "name": "מאהל גדול קבוע מחיצה 06",
+              "fromPerNight": 860,
+              "rates": [
+                {
+                  "label": "מאהל גדול קבוע",
+                  "total": 1720
+                }
+              ]
+            }
+          ],
+          "soldOutHint": false,
+          "url": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=13&in=2026-11-12&out=2026-11-14&rooms=1&ad1=2&ch1=3&inf1=0"
+        },
+        {
+          "comp": {
+            "adults": 2,
+            "children": 3,
+            "infants": 1
+          },
+          "lodging": [
+            {
+              "name": "לינת שטח באוהלים פרטיים",
+              "fromPerNight": 201,
+              "rates": [
+                {
+                  "label": "לינת שטח באוהלים פרטיים - מחיר רגיל",
+                  "total": 538
+                },
+                {
+                  "label": "לינת שטח באוהלים פרטיים - מחיר מנוי מטמון",
+                  "total": 402
+                },
+                {
+                  "label": "לינת שטח באוהלים פרטיים - מחיר משרת מילואים פעיל",
+                  "total": 456
+                },
+                {
+                  "label": "לינת שטח באוהלים פרטיים - מחיר חייל בשירות חובה ושירות לאומי",
+                  "total": 470
+                }
+              ]
+            },
+            {
+              "name": "מאהל גדול קבוע מחיצה 02",
+              "fromPerNight": 860,
+              "rates": [
+                {
+                  "label": "מאהל גדול קבוע",
+                  "total": 1720
+                }
+              ]
+            },
+            {
+              "name": "מאהל גדול קבוע מחיצה 03",
+              "fromPerNight": 860,
+              "rates": [
+                {
+                  "label": "מאהל גדול קבוע",
+                  "total": 1720
+                }
+              ]
+            },
+            {
+              "name": "מאהל גדול קבוע מחיצה 04",
+              "fromPerNight": 860,
+              "rates": [
+                {
+                  "label": "מאהל גדול קבוע",
+                  "total": 1720
+                }
+              ]
+            },
+            {
+              "name": "מאהל גדול קבוע מחיצה 05",
+              "fromPerNight": 860,
+              "rates": [
+                {
+                  "label": "מאהל גדול קבוע",
+                  "total": 1720
+                }
+              ]
+            },
+            {
+              "name": "מאהל גדול קבוע מחיצה 06",
+              "fromPerNight": 860,
+              "rates": [
+                {
+                  "label": "מאהל גדול קבוע",
+                  "total": 1720
+                }
+              ]
+            }
+          ],
+          "soldOutHint": false,
+          "url": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=13&in=2026-11-12&out=2026-11-14&rooms=1&ad1=2&ch1=3&inf1=1"
+        }
+      ]
+    }
+  }
+};
