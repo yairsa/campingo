@@ -8,6 +8,7 @@ const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application
 
 const ctx = {}; vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(__dirname + '/../backend/Code.gs', 'utf8'), ctx);
+require('./pin-trip').pinBackend(ctx);                         // Achziv prices, whatever trip.json says
 
 const rows = [];
 const reg = { all: () => rows, put: (r) => { if (!rows.includes(r)) rows.push(r); }, remove: (r) => rows.splice(rows.indexOf(r), 1),
@@ -22,6 +23,7 @@ let oldBackend = false, dropNext = 0, delay = 0, calls = [];
 (async () => {
   const browser = await chromium.launch({ executablePath: CHROME, headless: true });
   const page = await browser.newPage({ viewport: { width: 360, height: 780 } });
+  await require('./pin-trip')(page);                                 // Achziv prices and dates (tests/pin-trip.js)
   await page.addInitScript(() => { window.ACHZIV_NOTOUR = 1; });   // no guided tours or share modal here: tour.e2e.js covers them
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));

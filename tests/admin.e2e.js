@@ -8,6 +8,7 @@ const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application
 
 const ctx = {}; vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(__dirname + '/../backend/Code.gs', 'utf8'), ctx);
+require('./pin-trip').pinBackend(ctx);                         // Achziv prices, whatever trip.json says
 const ST = vm.runInContext('ST', ctx);
 const P = (x) => JSON.parse(JSON.stringify(x));
 
@@ -61,6 +62,7 @@ const calls = [];
 (async () => {
   const browser = await chromium.launch({ executablePath: CHROME, headless: true });
   const page = await browser.newPage({ viewport: { width: 360, height: 780 } });
+  await require('./pin-trip')(page);                                 // Achziv prices and dates (tests/pin-trip.js)
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
   await page.route('https://fonts.googleapis.com/**', r => r.abort());
@@ -277,6 +279,7 @@ const calls = [];
   assert.deepStrictEqual(await rows().then(r => r[0]), 'שלום מדף הניהול');
   {
     const pc = await browser.newContext({ viewport: { width: 360, height: 780 } });
+    await require('./pin-trip')(pc);
     const pub = await pc.newPage();
     pub.on('pageerror', e => errors.push('public: ' + e));
     await pub.route('https://fonts.googleapis.com/**', r => r.abort());

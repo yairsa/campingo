@@ -11,6 +11,7 @@ const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application
 
 const ctx = {}; vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(__dirname + '/../backend/Code.gs', 'utf8'), ctx);
+require('./pin-trip').pinBackend(ctx);                         // Achziv prices, whatever trip.json says
 const rows = [];
 const reg = { all: () => rows, put: (r) => { if (!rows.includes(r)) rows.push(r); }, remove: (r) => rows.splice(rows.indexOf(r), 1),
   hash: (u, p) => crypto.createHash('sha256').update(u + '|' + p).digest('hex'), now: () => '30/09/2026 12:00', nowMs: () => Date.now() };
@@ -27,6 +28,7 @@ const errors = [];
   // a fresh visitor: its own storage. share: 'none' (no share sheet: the menu) or 'stub' (records navigator.share)
   async function visitor(share) {
     const c = await browser.newContext({ viewport: { width: 360, height: 640 } });
+    await require('./pin-trip')(c);
     await c.addInitScript((mode) => {
       if (mode === 'none') delete Navigator.prototype.share;
       else { window.__shared = []; Navigator.prototype.share = function (d) { window.__shared.push(d); return Promise.resolve(); }; }
@@ -177,6 +179,7 @@ const errors = [];
   // ---- reduced motion: the plain jump between steps, no fade ----
   {
     const c = await browser.newContext({ viewport: { width: 360, height: 640 }, reducedMotion: 'reduce' });
+    await require('./pin-trip')(c);
     await c.route('https://**', r => r.abort());
     const p = await c.newPage(); p.on('pageerror', e => errors.push(String(e)));
     await p.goto(url); await waitTour(p);

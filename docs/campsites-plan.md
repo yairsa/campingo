@@ -76,8 +76,14 @@ Design (13/10/2026, refines the "Trip config" row in §3):
 - **Registration stays OFF for the new trip until Yair deploys the trip-aware backend** (§5.5 backend box). Without it a November save under an October name+code would overwrite the October row (the organizers' שולם reconciliation). The site sends `trip`; a backend that does not echo `trip` back means "old server", so the calculator works and saving shows "השרת עוד לא עודכן".
 - `activities.js` has `TRIP = {from:'2026-10-06', to:'2026-10-13'}` hardcoded: read it from `CAMP`. Place tab: replace the hand-written Achziv HTML with a renderer from `TRIP.campsite` (Achziv's text stays in git history). Waze/Maps by name: `https://waze.com/ul?q=<waze>&navigate=yes`, `https://www.google.com/maps/dir/?api=1&destination=<waze>`.
 
-- [ ] `trip.json` + `tools/trip.py` → `prices.js` + `trip.js`; Achziv fixtures; tests pinned (calc, backend, e2e via `tests/pin-trip.js`)
+- [x] `trip.json` + `tools/trip.py` → `prices.js` + `trip.js`; Achziv fixtures; tests pinned (calc, backend, e2e via `tests/pin-trip.js`)
   - `Code.gs` carries `prices.js`, so a trip switch needs `build.py` + a backend deploy (Yair's)
+  - changed from the design: `trip.js` is `trip.json` only; the page reads the campsite from `data/campsites.js` by `campsiteId` (embedding it would make `--check` red on every crawler heartbeat). `--check` ignores `CAMP.checked`, so it goes red only when RTG's prices really change: then `trip.py` + `build.py` + deploy
+  - generated Achziv = the 30/09 hand-written prices in every category field (`tests/test_trip.py`); only the mattress note is shorter (the gate hours were Achziv-only)
+  - e2e pages load from `file://`, which `page.route` can't intercept: `pin-trip.js` locks `window.CAMP`/`TRIP` with an init script; `pinBackend(ctx)` re-runs the fixture + `calc.js` in each test's `Code.gs` vm
+  - 🔴 **all §5.3–5.5 work lives on branch `feat/trip-switch` (worktree `../wt-trip`)**: the scheduled crawler pushes `main`, so a local commit on `main` goes live within 6h. The merge to `main` waits for the §5.5 backend box *and* Yair's deploy of it (a Beerot `Code.gs` on the old backend would reprice October registrations)
+  - `rtg.js` (`RTG.bookingUrl`, `RTG.splitOrders`, `RTG.LIMITS`) is the one deep-link builder for §5.4 and §5.5; `tests/rtg.test.js`
+- parallel streams (Yair 13/10: "parallel the work"), each a branch off `feat/trip-switch` in its own worktree, merged back by camp-campsites_2: **A** `feat/trip-backend` (§5.5 backend box + the site's `trip` field) · **B** `feat/explorer` (§5.4) · **C** `feat/booking` (§5.5 panel, prefill, e2e) · §5.3 boxes 2–4 stay here
 - [ ] Header, title, Waze/Maps and place tab come from the campsite record; hide the activities tab when the campsite has none
 - [ ] Switch the trip to חאן בארות 12–14/11/2026; "עודכן ב-…" with the stale flag
 - [ ] Gate: all repo gates (CLAUDE.md) + `stamp.py`; 360px check

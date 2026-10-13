@@ -2,6 +2,7 @@
 const assert = require('assert'), fs = require('fs'), vm = require('vm'), crypto = require('crypto');
 const ctx = {}; vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(__dirname + '/../backend/Code.gs', 'utf8'), ctx);
+require('./pin-trip').pinBackend(ctx);                         // Achziv prices, whatever trip.json says
 
 let clock = 1e12;
 function memStore() {

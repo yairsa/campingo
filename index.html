@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=337a9e01">
+  <link rel="stylesheet" href="explorer.css?v=13a4498a">
+  <link rel="stylesheet" href="booking.css?v=a73719e3">
 </head>
 <body>
   <a class="skip" href="#main">דלג לתוכן</a>
@@ -157,6 +159,8 @@
 
     <!-- ===== Place ===== -->
     <section role="tabpanel" id="panel-place" aria-labelledby="tab-place" hidden>
+
+      <div class="card" id="booking" hidden></div>   <!-- booking.js (§5.5) -->
 
       <div class="card">
         <h2>נגישות</h2>
@@ -407,7 +411,11 @@
     <p class="msg good" id="share-dlg-msg" role="status" aria-live="polite"></p>
   </dialog>
 
-  <script src="prices.js?v=3356155e"></script>
+  <script src="trip.js?v=ff8d585f"></script>
+  <!-- crawled data (crawler/crawl.py): not stamped, the crawler changes it -->
+  <script src="data/campsites.js"></script>
+  <script src="data/availability.js"></script>
+  <script src="prices.js?v=5185357e"></script>
   <script src="calc.js?v=71cdda73"></script>
   <script src="app.js?v=074275ae"></script>
   <script src="search.js?v=31352673"></script>
@@ -417,6 +425,9 @@
   <script src="acts-demo.js?v=b2f8d20b"></script>
   <script src="activities.js?v=a97023ba"></script>
   <script src="share.js?v=1d3c3429"></script>
+  <script src="rtg.js?v=fcaf85ad"></script>
+  <script src="explorer.js?v=2cc1e7de"></script>
+  <script src="booking.js?v=8c3a0fdb"></script>
   <script src="tour-texts.js?v=584ba1df"></script>
   <script src="tour.js?v=58c1f60b"></script>
 </body>
