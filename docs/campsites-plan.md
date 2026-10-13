@@ -2,7 +2,7 @@
 
 > **Open questions for Yair** (hand-kept): none open. His 13/10/2026 answers are in §2.
 
-**Status:** plan written 13/10/2026; nothing built yet. Next: the first unticked box in §5.
+**Status:** crawler done and scheduled (§5.1–5.2, 13/10/2026). Next: the first unticked box in §5 (§5.3).
 
 ## 1. The brief (Yair, 13/10/2026)
 
@@ -62,10 +62,10 @@ Answers, 13/10/2026 (AskUserQuestion):
 - [x] `crawl.py run`: info (if older than 20h) + availability → commit + push only on a diff; append to `runs.log`; exit 1 on errors, with what failed
   - the git path (diff ignoring `checkedAt`) is unit-tested on a temp repo, not run live; a 36h heartbeat commit keeps the site's stale flag honest
 - [x] `crawler/install-task.ps1`: registers the scheduled task (hidden window, no focus stealing); README section
-  - written and parse-checked only; NOT run
-- [ ] Gate: tests green; two manual runs in a row → the second makes no commit; the task appears in Task Scheduler and its first run logs OK
-  - done: tests green (`python crawler/test_crawl.py`, 24); "second run makes no commit" is covered by a unit test on a temp repo
-  - open: run `install-task.ps1` (Yair's PC), confirm it in Task Scheduler and that its first run logs OK in `crawler/runs.log`
+  - installed 13/10/2026 (`0c2260d`)
+- [x] Gate: tests green; two manual runs in a row → the second makes no commit; the task appears in Task Scheduler and its first run logs OK
+  - verified 13/10/2026: tests green (26); two live runs in a row made no commit and left the tree clean; task "CampWebsite crawler" registered, its first run (18:19) logged `errors 0`, result 0; next 23:30
+  - fixed on the way (`0c2260d`): a timestamp-only run used to leave `data/` dirty, and it committed on any checked-out branch; now it restores HEAD's copy and commits only from `main`
 
 #### 5.3 Site: trip config from the data
 
