@@ -460,3 +460,6 @@ p.awho { border: 0; padding: 0; }
 }
 .tour-out { opacity: 0; }
 @keyframes tour-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* place.js: the crawled data is older than 3 days (the crawler stopped) */
+.stale { color: var(--danger); }

@@ -87,7 +87,9 @@ Design (13/10/2026, refines the "Trip config" row in §3):
 - [x] Header, title, Waze/Maps and place tab come from the campsite record; ~~hide the activities tab when the campsite has none~~ — dropped: the activities tab is the group's own planner, not campsite data; its dates now come from `TRIP`
   - `place.js` renders the header and `#place-info` from `TRIP` + `CAMPSITES`; Waze/Maps by the crawled Waze name; the share text from `window.PLACE`. The hand-written Achziv cards (accessibility, northern site) are in git history
   - left for after the streams merge (they touch the same files): `app.js` "ההרשמה שלי לקמפינג באכזיב" (registration copy, stream A's area) and the welcome tour text "לקמפינג באכזיב" in `tour-texts.js` (a built-in text: the old one goes in its replaced-texts list)
-- [ ] Switch the trip to חאן בארות 12–14/11/2026; "עודכן ב-…" with the stale flag
+- [x] Switch the trip to חאן בארות 12–14/11/2026; "עודכן ב-…" with the stale flag
+  - `trip.json` already names Beerot (box 1), so the branch's site is the November trip. The place tab says "עודכן ב-dd/MM HH:mm" from `CAMPSITES.checkedAt` and flags it past 3 days (checked with a shifted clock)
+  - registration for November works only once stream A's backend is merged **and deployed by Yair**; until then the site says "השרת עוד לא עודכן"
 - [ ] Gate: all repo gates (CLAUDE.md) + `stamp.py`; 360px check
 
 #### 5.4 Site: the חניונים explorer

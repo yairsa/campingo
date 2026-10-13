@@ -72,6 +72,7 @@ const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application
   assert.ok(decodeURIComponent(await page.getAttribute('#nav-waze', 'href')).includes('q=חניון לילה גן לאומי אכזיב'));
   await page.click('#tab-place');
   assert.ok((await page.locator('#place-info .card h2').allInnerTexts()).includes('מה יש בחניון'));
+  assert.ok((await page.textContent('#place-checked')).includes('עודכן ב-'));
   await noHScroll('place');
   assert.deepStrictEqual(errors, []);
   await browser.close();

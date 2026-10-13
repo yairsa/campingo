@@ -54,7 +54,9 @@
   if (c.phone) contact.push('טלפון: <a href="tel:' + esc(c.phone.replace(/[^\d*+]/g, '')) + '">' + esc(c.phone) + '</a>');
   if (c.whatsapp) contact.push('<a href="' + esc(c.whatsapp) + '" target="_blank" rel="noopener">וואטסאפ</a>');
   if (c.email) contact.push('דוא"ל: <a href="mailto:' + esc(c.email) + '">' + esc(c.email) + '</a>');
-  var checked = window.CAMPSITES.checkedAt ? dm(window.CAMPSITES.checkedAt.slice(0, 10)) : '';
+  // the crawler runs every 6h and commits a heartbeat at least every 36h, so 3 days old means it stopped
+  var at = window.CAMPSITES.checkedAt, stale = at && Date.now() - new Date(at).getTime() > 3 * 864e5;
+  var checked = at ? dm(at.slice(0, 10)) + ' ' + at.slice(11, 16) : '';
 
   box.innerHTML =
     card('שעות', facts ? '<dl class="facts">' + facts + '</dl>' + list(other, 'rules') : '') +
@@ -66,7 +68,8 @@
       (site.directions ? '<p>' + esc(site.directions) + '</p>' : '') +
       (site.waze ? '<p>בוויז: <strong>' + esc(site.waze) + '</strong></p>' : '') +
       (contact.length ? '<p>' + contact.join(' · ') + '</p>' : '')) +
-    '<p class="hint">המידע מאתר רשות הטבע והגנים' + (checked ? ', נבדק ב-' + esc(checked) : '') +
+    '<p class="hint" id="place-checked">המידע מאתר רשות הטבע והגנים' + (checked ? ', עודכן ב-' + esc(checked) : '') +
+      (stale ? ' <strong class="stale">(לא עודכן יותר מ-3 ימים: ייתכן שהמידע השתנה)</strong>' : '') +
       '. <a href="' + esc(site.url) + '" target="_blank" rel="noopener">לעמוד החניון באתר רט״ג</a></p>';
   window.PLACE = { site: site, name: place, range: range };
 })();
