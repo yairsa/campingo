@@ -1,6 +1,6 @@
 # CampinGo — plan
 
-> **Open questions for Yair** (hand-kept): §4.4 — go-ahead to land (rename + merge makes the new design live). His 13/10/2026 answers are in §1.
+> **Open questions for Yair** (hand-kept): none open (§4.4's go-ahead answered 14/10/2026). His 13/10/2026 answers are in §1.
 
 **Status:** §4.2 and §4.3 built on branch `feat/campingo` (worktree `../wt-campingo`), all gates green, 14/10/2026. Next: §4.1 + §4.4 together (the rename lands with the merge).
 
@@ -66,7 +66,8 @@ Answers, 13/10/2026 (AskUserQuestion):
 - [x] Gate: all repo gates green (16/16, 14/10/2026)
 
 #### 4.4 Land
-<Yair: > The design is built and green on `feat/campingo` (screenshots sent 14/10/2026). Landing renames the repo, makes the old address forward, and puts the new home page live for the families. Land it, or change something first?
+<Yair: Land it> The design is built and green on `feat/campingo` (screenshots sent 14/10/2026). Landing renames the repo, makes the old address forward, and puts the new home page live for the families. Land it, or change something first?
+  - **Answered 14/10/2026 (AskUserQuestion): "Land it".**
 - [ ] Merge `feat/campingo` to `main` together with §4.1's rename; live check on the new address (home, a button, an old link forwarding)
   - Then `Code.gs` on Yair's clipboard (the calc tour); his deploy.
 - [ ] Gate: live check passes; `docs/campsites-plan.md` and `CLAUDE.md` name the new address
