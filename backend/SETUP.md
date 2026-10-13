@@ -23,7 +23,7 @@ PINs are stored only as salted SHA-256 hashes; the salt is kept in the script's 
 
 ## The managing page (day-to-day work, from a phone)
 
-`admin.html` on the site (https://yairsa.github.io/achziv-camping-calculator/admin.html; not linked from the public page) does on a phone what the sections below do in the sheet: the waiting list (tips, comments, suggested gear) reviewed one by one, with edit · אישור · דחייה · מיזוג; any current tip, comment, gear item, activity or tour text edited or hidden; and registrations (dates and headcount priced by the calculator's own code, cancel, unlock a locked name). It never shows or resets a family's code, and payments stay in the organizers' sheet.
+`admin.html` on the site (https://yairsa.github.io/campingo/admin.html; not linked from the public page) does on a phone what the sections below do in the sheet: the waiting list (tips, comments, suggested gear) reviewed one by one, with edit · אישור · דחייה · מיזוג; any current tip, comment, gear item, activity or tour text edited or hidden; and registrations (dates and headcount priced by the calculator's own code, cancel, unlock a locked name). It never shows or resets a family's code, and payments stay in the organizers' sheet.
 
 - **Password, once per organizer:** in the registration sheet, **מארגנים → סיסמת ניהול**, then a name and a password. Running it again for the same name replaces that password and logs out that name's phones. Only a salted hash is stored, in the script's properties.
 - **Login** lasts 7 days on that phone; **יציאה** ends it. 5 wrong passwords lock that name for 15 minutes.

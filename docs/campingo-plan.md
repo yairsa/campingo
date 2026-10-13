@@ -39,7 +39,8 @@ Answers, 13/10/2026 (AskUserQuestion):
 #### 4.1 Address: rename + forwarding
 - [ ] `gh repo rename campingo` (in the main checkout); confirm `git remote -v` points at `yairsa/campingo`; Pages serves `https://yairsa.github.io/campingo/`
 - [ ] Forwarding repo `yairsa/achziv-camping-calculator` (new, public, Pages on `main`): `index.html` + `admin.html` + `404.html` that replace `location` with the same path, query and hash under `/campingo/` (meta refresh as the no-JS fallback)
-- [ ] `share.js` `LIVE`, `tests/tour.e2e.js`, `README.md`, `CLAUDE.md`, `backend/SETUP.md` point at the new address
+  - The page's source is `forwarder/index.html` in this repo (written 14/10/2026); publish it as all three files.
+- [x] `share.js` `LIVE`, `tests/tour.e2e.js`, `README.md`, `CLAUDE.md`, `backend/SETUP.md` point at the new address (on the branch)
 - [ ] Gate: old link `…/achziv-camping-calculator/#gear` lands on `…/campingo/#gear` (headless, live); a crawler run still pushes (`git push --dry-run` from the main checkout)
 
 #### 4.2 Home page

@@ -217,7 +217,7 @@ const errors = [];
   assert.ok(await page.isVisible('#share-menu'));
   assert.strictEqual(await page.getAttribute('#share-btn', 'aria-expanded'), 'true');
   const wa = decodeURIComponent(await page.getAttribute('#share-wa', 'href'));
-  assert.ok(wa.startsWith('https://wa.me/?text=') && wa.includes('https://yairsa.github.io/achziv-camping-calculator/'), wa);
+  assert.ok(wa.startsWith('https://wa.me/?text=') && wa.includes('https://yairsa.github.io/campingo/'), wa);
   assert.ok(!/קוד|1234/.test(wa), 'personal data in the shared text');
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'horizontal scroll: share menu');
   await page.click('#share-copy');
@@ -232,7 +232,7 @@ const errors = [];
   assert.ok(await page.isHidden('#share-menu'));
   const shared = await page.evaluate(() => window.__shared);
   assert.strictEqual(shared.length, 1);
-  assert.strictEqual(shared[0].url, 'https://yairsa.github.io/achziv-camping-calculator/');
+  assert.strictEqual(shared[0].url, 'https://yairsa.github.io/campingo/');
 
   // ---- the share modal: once, after the first successful registration ----
   page = await visitor('none');
