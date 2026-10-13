@@ -17,16 +17,21 @@
 
   <!-- the wordmark's "in": the i, then the logo's tent as the n (docs/campingo-plan.md §4.5). Units: 100 = 1em, the baseline at the bottom -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-    <g id="wm-tent"><path fill-rule="evenodd" d="M22 100 57 34 92 100zM57 34 42 100h30z"/><path class="wm-flap" fill-rule="evenodd" d="M57 34 42 100h30zM57 60 47 100h20z"/></g>
-    <g id="wm-in-peg"><path d="M2 50h14v36l-7 14-7-14z"/><circle class="wm-sun wm-glow" cx="9" cy="30" r="14"/><circle class="wm-sun" cx="9" cy="30" r="9"/><use href="#wm-tent"/></g>
-    <g id="wm-in-flag"><rect x="2" y="14" width="14" height="86" rx="2"/><path class="wm-sun" d="M16 15 38 24 16 33z"/><use href="#wm-tent"/></g>
-    <g id="wm-in-lamp"><rect x="2" y="50" width="14" height="50" rx="2"/><circle class="wm-sun wm-glow" cx="9" cy="25" r="15"/><circle cx="9" cy="7" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="1" y="10" width="16" height="4" rx="1.5"/><rect class="wm-sun" x="3" y="14" width="12" height="18" rx="3"/><rect x="1" y="32" width="16" height="4" rx="1.5"/><use href="#wm-tent"/></g>
+    <g id="wm-tent-a"><path fill-rule="evenodd" d="M22 100 57 34 92 100zM57 34 42 100h30z"/><path class="wm-flap" fill-rule="evenodd" d="M57 34 42 100h30zM57 60 47 100h20z"/></g>
+    <g id="wm-tent-dome"><path fill-rule="evenodd" d="M22 100C22 56 38 36 57 36s35 20 35 64zM57 36C49 50 44 72 44 100h26c0-28-5-50-13-64z"/><path class="wm-flap" fill-rule="evenodd" d="M57 36C49 50 44 72 44 100h26c0-28-5-50-13-64zM48 100V84a9 9 0 0 1 18 0v16z"/></g>
+    <g id="wm-i-peg"><path d="M2 50h14v36l-7 14-7-14z"/><circle class="wm-sun wm-glow" cx="9" cy="30" r="14"/><circle class="wm-sun" cx="9" cy="30" r="9"/></g>
+    <g id="wm-i-flag"><rect x="2" y="14" width="14" height="86" rx="2"/><path class="wm-sun" d="M16 15 38 24 16 33z"/></g>
+    <g id="wm-i-lamp"><rect x="2" y="50" width="14" height="50" rx="2"/><circle class="wm-sun wm-glow" cx="9" cy="25" r="15"/><circle cx="9" cy="7" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="1" y="10" width="16" height="4" rx="1.5"/><rect class="wm-sun" x="3" y="14" width="12" height="18" rx="3"/><rect x="1" y="32" width="16" height="4" rx="1.5"/></g>
+    <g id="wm-i-flame"><rect x="2" y="50" width="14" height="50" rx="2"/><circle class="wm-sun wm-glow" cx="9" cy="31" r="14"/><path class="wm-sun" d="M9 12c7 8 10 15 7 22-1.5 3.5-12.5 3.5-14 0-2-5 0-9 3-12 0 4 2 5 3 5-1-5 0-10 1-15z"/></g>
+    <g id="wm-i-star"><rect x="2" y="50" width="14" height="50" rx="2"/><circle class="wm-sun wm-glow" cx="9" cy="30" r="14"/><path class="wm-sun" d="M9.0 20.0 11.5 26.6 18.5 26.9 13.0 31.3 14.9 38.1 9.0 34.2 3.1 38.1 5.0 31.3 -0.5 26.9 6.5 26.6z"/></g>
+    <g id="wm-i-moon"><rect x="2" y="50" width="14" height="50" rx="2"/><circle class="wm-sun wm-glow" cx="9" cy="30" r="14"/><path class="wm-sun" d="M14 20.5A10 10 0 1 0 14 39.5 8 8 0 1 1 14 20.5z"/></g>
+    <g id="wm-i-pine"><rect x="2" y="50" width="14" height="50" rx="2"/><path d="M9 8 19 26h-5l7 16H-3l7-16H-1z"/></g>
   </defs></svg>
 
   <!-- the brand bar, on every view (docs/campingo-plan.md §3) -->
   <header class="top">
     <a class="brand" href="#" id="brand" aria-label="CampinGo, לדף הראשי">
-      <span class="wm" aria-hidden="true">Camp<svg class="wm-in" viewBox="0 0 96 100"><use href="#wm-in-peg"/></svg>Go</span>
+      <span class="wm" aria-hidden="true">Camp<svg class="wm-in" viewBox="0 0 96 100"><use href="#wm-i-peg"/><use href="#wm-tent-a"/></svg>Go</span>
     </a>
     <div class="top-tools">
       <button type="button" id="share-btn" class="btn-secondary nav-btn" aria-controls="share-menu" aria-expanded="false"><svg class="nav-logo" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4"/></svg>שיתוף</button>
@@ -46,7 +51,7 @@
     <!-- ===== Home: the next trip and the hive ===== -->
     <section id="home" aria-labelledby="home-title">
       <div class="hero">
-        <h1 id="home-title"><span class="wm" role="img" aria-label="CampinGo">Camp<svg class="wm-in" viewBox="0 0 96 100" aria-hidden="true"><use href="#wm-in-peg"/></svg>Go</span></h1>
+        <h1 id="home-title"><span class="wm" role="img" aria-label="CampinGo">Camp<svg class="wm-in" viewBox="0 0 96 100" aria-hidden="true"><use href="#wm-i-peg"/><use href="#wm-tent-a"/></svg>Go</span></h1>
         <p class="tagline">קמפינג קבוצתי, מסודר מראש</p>
         <!-- place.js fills the card from trip.js and the crawled campsite -->
         <div class="trip-card" id="trip-card">
