@@ -27,13 +27,23 @@
   // Google's web-app reply step fails intermittently (~1 in 3 replies dropped after the script ran): retry until JSON.
   // A reply that hangs is given up after 30s and retried the same way (every admin write is safe to repeat).
   var TIMEOUT = window.ACHZIV_ADMIN_TIMEOUT || 30000;              // the e2e test shortens it
+  // The trip whose registrations this page manages: the current one, or ?trip=<id> for an earlier trip (its stays
+  // cannot be re-priced there: the server answers 'past_trip'; cancelling and unlocking still work).
+  var TRIP = (/[?&]trip=([\w-]+)/.exec(location.search) || [])[1] || C.tripId || '';
   function api(body, attempt) {
     attempt = attempt || 1;
+    if (attempt === 1 && TRIP && /^adminFamil/.test(body.action) && !body.trip) body.trip = TRIP;
     var ac = window.AbortController ? new AbortController() : null, timer = ac && setTimeout(function () { ac.abort(); }, TIMEOUT);
     return fetch(C.apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body),
                              signal: ac ? ac.signal : undefined })
       .then(function (r) { return r.json(); })
-      .then(function (res) { clearTimeout(timer); return res; }, function (e) { clearTimeout(timer); throw e; })
+      // a registration reply that does not echo the trip comes from a backend that predates trips: it would
+      // show (and edit) October's rows under this trip's name, so it counts as "server not updated"
+      .then(function (res) {
+        clearTimeout(timer);
+        var reg = res && res.ok && body.trip && /^adminFamil/.test(body.action);
+        return reg && res.trip == null && body.trip !== 'achziv-2026-10' ? { ok: false, error: 'bad_request' } : res;
+      }, function (e) { clearTimeout(timer); throw e; })
       .catch(function () {
         if (attempt >= 4) return { ok: false, error: 'network' };
         return new Promise(function (res) { setTimeout(res, 400 * attempt); }).then(function () { return api(body, attempt + 1); });

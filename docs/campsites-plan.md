@@ -96,7 +96,12 @@ Design (13/10/2026, refines the "Trip config" row in §3):
 #### 5.5 Site: booking helper (imitate RTG registration)
 - [ ] Panel: families count → a composition row per family (engine bands, engine limits); split into orders of ≤4; one deep-link button per order; the snapshot's availability and price per order
 - [ ] "מילוי מהנרשמים": prefill from registered families (names + people per night from the public summary only)
-- [ ] Backend: `trip` field, a registrations tab per trip, Achziv rows = `achziv-2026-10`; tests; build; **Code.gs to Yair's clipboard; deploy is his**
+- [x] Backend: `trip` field, a registrations tab per trip, Achziv rows = `achziv-2026-10`; tests; build; **Code.gs to Yair's clipboard; deploy is his** (code, tests and site done on `feat/trip-backend`; the clipboard and the deploy wait for the coordinator/Yair)
+  - missing `trip` = Achziv; accepted = Achziv + `CAMP.tripId`, else `bad_trip`; every registration reply (errors too) echoes `trip`; Achziv stays in the tab `הרשמות`, another trip in `הרשמות <tripId>` made on first use (`sheetStore_(trip)`; `route` takes a store or a `trip -> store` function)
+  - **past-trip rule: `adminFamilyUpdate` on a trip that is not the current one answers `past_trip`** (calc.js prices with the CURRENT trip's prices, so a re-save would silently re-rate October's family; cancel/unlock still work on any trip)
+  - organizers' file: Achziv keeps its four tabs, another trip gets `<tab> <tripId>` (families, nights, summary); the activities tab stays single
+  - site: `api()` adds `trip` to registration actions (GET summary as `?trip=`), storage keys are suffixed for non-Achziv trips; a reply without `trip` = old server: on a non-Achziv trip saving shows "השרת עוד לא עודכן" and nothing is sent (a write first probes the summary); Achziv on the old backend is unchanged. `admin.js` sends `trip` (the current trip, or `?trip=<id>`) and treats an echo-less family reply as "server not updated"
+  - still hardcoded: activities `TRIP = {from:'2026-10-06', to:'2026-10-13'}` in `Code.source.gs`; `DEFAULT_TRIP` (= Achziv) in `Code.source.gs` and `app.js`
 - [ ] e2e test for the panel (link format per order, the split at 5 families)
 - [ ] Gate: all repo gates; a deep link from the panel opens the real page with the right compositions (one headless check)
 
