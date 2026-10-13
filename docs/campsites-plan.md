@@ -2,7 +2,7 @@
 
 > **Open questions for Yair** (hand-kept): none open. His 13/10/2026 answers are in §2.
 
-**Status:** §5.1–5.5 built (13/10/2026). §5.3–5.5 live on branch `feat/trip-switch` only, waiting for Yair's backend deploy; then merge to `main`.
+**Status:** §5.1–5.5 live 13/10/2026 (`28487c9`, after Yair's backend deploy; live check: the November trip, 18 campsites, the booking panel, the backend echoes `trip`). Next: §5.6.
 
 ## 1. The brief (Yair, 13/10/2026)
 
