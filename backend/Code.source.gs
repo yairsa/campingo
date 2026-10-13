@@ -5,6 +5,12 @@
 // Apps Script. Code.gs writes Hebrew as \u escapes because pasting Hebrew into the Apps Script editor
 // reversed it (30/09/2026: the tab came out as "תומשרה").
 //
+// Trips (docs/campsites-plan.md §5.5): every registration, activity-login and managing-page family request may carry
+// `trip` (a trip id). Missing = 'achziv-2026-10' (old clients). Only that trip and the current one (window.CAMP.tripId,
+// from prices.js) are accepted; anything else answers 'bad_trip'. Achziv's registrations stay in the tab 'הרשמות';
+// any other trip has its own tab 'הרשמות <tripId>', created on first use. A name + code belongs to one trip.
+// Every such reply echoes `trip`: a reply without it tells the site it talks to an old backend.
+//
 // Actions (POST body is JSON, sent as text/plain to avoid a CORS preflight):
 //   save    {user, pin, data, nights, maxPeople, full, group}          → create, or update if the pin matches
 //   load    {user, pin}                                                → the saved calculator state
@@ -25,7 +31,7 @@
 //   adminMe    {token}                                                 → {name} while the token is valid
 //   (every other admin action carries {token}; any token problem answers error 'auth')
 //   adminFamilies {token}                                              → every registration (never a code)
-//   adminFamilyUpdate {token, user, data}                              → a new stay, priced by calc.js
+//   adminFamilyUpdate {token, user, data}                              → a new stay, priced by calc.js (current trip only)
 //   adminFamilyCancel {token, user} / adminFamilyUnlock {token, user}  → remove it / lift a wrong-code lock
 
 var SHEET_NAME = 'הרשמות';
@@ -33,10 +39,14 @@ var HEAD = ['שם משתמש', 'שם להצגה', 'עודכן', 'לנים (מק�
             'נתונים', 'pinHash', 'ניסיונות כושלים', 'ניסיון כושל אחרון'];
 var COL = { user: 0, family: 1, updated: 2, maxPeople: 3, nightsText: 4, full: 5, group: 6,
             data: 7, pinHash: 8, fails: 9, lastFail: 10 };
+var DEFAULT_TRIP = 'achziv-2026-10';   // the trip every request without `trip` means, and whose rows sit in SHEET_NAME
 var MAX_FAILS = 5;
 var LOCK_MS = 15 * 60 * 1000;   // temporary, so a stranger cannot lock a family out for good
 
-function doGet() { return json_(route({ action: 'summary' }, sheetStore_())); }
+function doGet(e) {
+  var t = e && e.parameter && e.parameter.trip;
+  return json_(route({ action: 'summary', trip: t }, sheetStore_));
+}
 
 function doPost(e) {
   var req;
@@ -55,9 +65,9 @@ function doPost(e) {
       return ContentService.createTextOutput(out).setMimeType(ContentService.MimeType.JSON);
     }
     if (req && /^admin/.test(req.action)) {
-      var ares = route(req, sheetStore_(), tipsStore_(), activitiesStore_(), adminStore_());
+      var ares = route(req, sheetStore_, tipsStore_(), activitiesStore_(), adminStore_());
       if (ares.ok && FAMILY_WRITES[req.action]) {
-        try { syncOrganizers_(); } catch (x) { /* the organizers' copy must never break a change */ }
+        try { syncOrganizers_(ares.trip); } catch (x) { /* the organizers' copy must never break a change */ }
       } else if (ares.ok && !ADMIN_READS[req.action]) {
         CacheService.getScriptCache().removeAll([TIPS_CACHE, GEAR_CACHE, ACTS_CACHE, TOUR_CACHE]);   // the site shows it at once
       }
@@ -65,10 +75,10 @@ function doPost(e) {
     }
     var tipAction = req && (req.action === 'submitTip' || req.action === 'submitComment' || req.action === 'submitGear');
     var actAction = !!(req && ACT_WRITES[req.action]);
-    var res = route(req, tipAction ? null : sheetStore_(), tipAction ? tipsStore_() : null, actAction ? activitiesStore_() : null);
+    var res = route(req, tipAction ? null : sheetStore_, tipAction ? tipsStore_() : null, actAction ? activitiesStore_() : null);
     if (res.ok && actAction) CacheService.getScriptCache().remove(ACTS_CACHE);
     if (res.ok && (req.action === 'save' || req.action === 'delete' || actAction)) {
-      try { syncOrganizers_(); } catch (x) { /* the organizers' copy must never break a registration */ }
+      try { syncOrganizers_(res.trip); } catch (x) { /* the organizers' copy must never break a registration */ }
     }
     return json_(res);
   } finally { lock.releaseLock(); }
@@ -77,8 +87,35 @@ function doPost(e) {
 function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
 
 // ---------- pure logic (store is injected so it can be tested outside Google) ----------
-// store = registrations, tstore = tips, comments and gear, astore = activities, adm = organizers' logins.
+// store = registrations (a store, or a function trip -> store: the real one opens that trip's tab), tstore = tips, comments and gear, astore = activities, adm = organizers' logins.
 function route(req, store, tstore, astore, adm) {
+  var trip = null;
+  try {
+    if (req && REG_ACTIONS[req.action]) {
+      trip = tripOf_(req);
+      if (typeof store === 'function') store = store(trip);
+    }
+    var res = routeAction_(req, store, tstore, astore, adm);
+    if (trip && res && typeof res === 'object') res.trip = trip;
+    return res;
+  } catch (x) {
+    var err = { ok: false, error: x.code || 'server_error' };
+    if (trip) err.trip = trip;
+    return err;
+  }
+}
+// The actions that read or write a trip's registrations (login included: activities, managing page).
+var REG_ACTIONS = { save: 1, load: 1, 'delete': 1, summary: 1, saveActivity: 1, deleteActivity: 1, join: 1, leave: 1,
+                    adminFamilies: 1, adminFamilyUpdate: 1, adminFamilyCancel: 1, adminFamilyUnlock: 1 };
+function currentTrip_() { return (window.CAMP && window.CAMP.tripId) || DEFAULT_TRIP; }
+function tripOf_(req) {
+  var t = req.trip;
+  if (t == null || t === '') return DEFAULT_TRIP;
+  if (t === DEFAULT_TRIP || t === currentTrip_()) return t;
+  fail_('bad_trip');
+}
+function tripTab_(trip) { return trip === DEFAULT_TRIP ? SHEET_NAME : SHEET_NAME + ' ' + trip; }
+function routeAction_(req, store, tstore, astore, adm) {
   try {
     switch (req && req.action) {
       case 'save': return save_(req, store);
@@ -285,7 +322,23 @@ function organizerTable_(rows, existing) {
   return { computed: computed, nights: nights };
 }
 
-function syncOrganizers_() {
+// Achziv keeps the tab names above; another trip gets its own four-tab set, named "<tab> <tripId>", so the payment
+// columns organizers typed for one trip never meet another trip's families. The activities tab stays single.
+function orgTabs_(trip) {
+  if (!trip || trip === DEFAULT_TRIP) return ORG_TABS;
+  var o = {};
+  Object.keys(ORG_TABS).forEach(function (k) { o[k] = k === 'acts' ? ORG_TABS[k] : ORG_TABS[k] + ' ' + trip; });
+  return o;
+}
+// The sheet menu and syncNow refresh every trip this backend serves.
+function syncAllOrganizers_() {
+  var ok = syncOrganizers_(DEFAULT_TRIP);
+  if (currentTrip_() !== DEFAULT_TRIP) ok = syncOrganizers_(currentTrip_()) && ok;
+  return ok;
+}
+function syncOrganizers_(trip) {
+  trip = trip || DEFAULT_TRIP;
+  var T = orgTabs_(trip);
   var id = PropertiesService.getScriptProperties().getProperty(ORG_PROP);
   if (!id) return false;
   var ss = SpreadsheetApp.openById(id);
@@ -294,11 +347,11 @@ function syncOrganizers_() {
     if (!sh) { sh = ss.insertSheet(name); sh.setRightToLeft(true); sh.setFrozenRows(1); }
     return sh;
   }
-  var fam = tab(ORG_TABS.families), ngt = tab(ORG_TABS.nights), sum = tab(ORG_TABS.summary);
+  var fam = tab(T.families), ngt = tab(T.nights), sum = tab(T.summary);
   var w = ORG_HEAD.length;
   var last = fam.getLastRow();
   var existing = last > 1 ? fam.getRange(2, 1, last - 1, Math.max(w, fam.getLastColumn())).getValues() : [];
-  var t = organizerTable_(sheetStore_().all(), existing);
+  var t = organizerTable_(sheetStore_(trip).all(), existing);
 
   fam.getRange(1, 1, 1, w + ORG_MANUAL.length).setValues([ORG_HEAD.concat(ORG_MANUAL)]).setFontWeight('bold');
   if (t.computed.length) fam.getRange(2, 1, t.computed.length, w).setValues(t.computed);   // manual columns untouched
@@ -307,7 +360,7 @@ function syncOrganizers_() {
   ngt.getRange(1, 1, 1, 4).setValues([['לילה', 'לנים', 'משפחות', 'מחיר קבוצתי (' + GROUP_MIN + '+)?']]).setFontWeight('bold');
   if (t.nights.length) ngt.getRange(2, 1, t.nights.length, 4).setValues(t.nights);
 
-  var F = "'" + ORG_TABS.families + "'!";
+  var F = "'" + T.families + "'!";
   sum.clearContents();
   sum.getRange(1, 1, 6, 2).setValues([
     ['משפחות רשומות', '=COUNTIF(' + F + 'B2:B,"רשום")'],
@@ -319,7 +372,7 @@ function syncOrganizers_() {
   ]);
   sum.getRange(1, 1, 6, 1).setFontWeight('bold');
 
-  var act = tab(ORG_TABS.acts), acts = organizerActivities_(activitiesPublic_(activitiesStore_()));
+  var act = tab(T.acts), acts = organizerActivities_(activitiesPublic_(activitiesStore_()));
   act.clearContents();
   act.getRange(1, 1, 1, ORG_ACT_HEAD.length).setValues([ORG_ACT_HEAD]).setFontWeight('bold');
   if (acts.length) act.getRange(2, 1, acts.length, ORG_ACT_HEAD.length).setValues(acts);
@@ -327,7 +380,7 @@ function syncOrganizers_() {
   // drop the empty default tab a new spreadsheet comes with
   var ours = Object.keys(ORG_TABS).map(function (k) { return ORG_TABS[k]; });
   ss.getSheets().forEach(function (s) {
-    if (ours.indexOf(s.getName()) < 0 && s.getLastRow() === 0 && ss.getSheets().length > 1) ss.deleteSheet(s);
+    if (!ours.some(function (n) { return s.getName().indexOf(n) === 0; }) && s.getLastRow() === 0 && ss.getSheets().length > 1) ss.deleteSheet(s);
   });
   return true;
 }
@@ -381,12 +434,12 @@ function connectOrganizers() {
   var m = /\/d\/([a-zA-Z0-9_-]{20,})/.exec(r.getResponseText()) || /^([a-zA-Z0-9_-]{20,})$/.exec(r.getResponseText().trim());
   if (!m) { ui.alert('לא זיהיתי קישור של Google Sheets.'); return; }
   PropertiesService.getScriptProperties().setProperty(ORG_PROP, m[1]);
-  syncOrganizers_();
+  syncAllOrganizers_();
   ui.alert('מחובר. גיליון המארגנים מתעדכן אחרי כל הרשמה, עדכון או ביטול.');
 }
 function syncNow() {
   var ui = SpreadsheetApp.getUi();
-  ui.alert(syncOrganizers_() ? 'גיליון המארגנים עודכן.' : 'עוד לא חובר גיליון מארגנים — מארגנים ← חיבור לגיליון המארגנים.');
+  ui.alert(syncAllOrganizers_() ? 'גיליון המארגנים עודכן.' : 'עוד לא חובר גיליון מארגנים — מארגנים ← חיבור לגיליון המארגנים.');
 }
 
 // ---------- tips (docs/tips-plan.md) ----------
@@ -1342,7 +1395,12 @@ function adminFamilies_(req, store, adm) {
 
 // New dates or headcount for one family: the stay is checked like the calculator checks it (no warnings), then
 // priced and counted by calc.js. The code, the name and the lock stay as they are. Repeatable and logged.
+// A PAST trip's registration is refused ('past_trip'), not repriced: calcAll uses window.CAMP, the CURRENT trip's
+// prices, so an October stay re-saved here would silently take November's rates and rewrite what the family owes
+// (and the organizers' reconciliation). Keeping a stale price next to changed dates would be as wrong, so the edit
+// is blocked; cancel and unlock still work on any trip. A past trip's rows are fixed by hand in its tab.
 function adminFamilyUpdate_(req, store, adm) {
+  if (tripOf_(req) !== currentTrip_()) fail_('past_trip');
   var who = adminAuth_(req, adm), row = familyRow_(store, req.user), K = window.CampCalc;
   var state = familyState_(req.data);
   if (K.warnings(state).length) fail_('bad_stay');
@@ -1388,11 +1446,11 @@ function logCell_(v) {
 }
 
 // ---------- Google Sheet store ----------
-function sheetStore_() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = ss.getSheetByName(SHEET_NAME);
-  if (!sh) {
-    sh = ss.insertSheet(SHEET_NAME);
+function sheetStore_(trip) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet(), tab = tripTab_(trip || DEFAULT_TRIP);
+  var sh = ss.getSheetByName(tab);
+  if (!sh) {                                        // a new trip's tab is made on first use, same header
+    sh = ss.insertSheet(tab);
     sh.appendRow(HEAD);
     sh.setFrozenRows(1);
     sh.setRightToLeft(true);
