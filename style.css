@@ -479,8 +479,6 @@ body[data-view="home"] .brand { visibility: hidden; }          /* the hero says 
 .hive li { --c: var(--hex); --c-hi: var(--hex-hi); --c-edge: color-mix(in srgb, var(--c) 55%, #000);
   margin-bottom: calc(var(--hh) * -.25 + var(--hg));
   filter: drop-shadow(3px 4px 0 var(--c-edge)) var(--cast-f); transition: filter .15s; }
-.hive li:hover, .hive li:has(.hex:focus-visible) {
-  filter: drop-shadow(3px 4px 0 var(--c-edge)) drop-shadow(0 0 14px var(--glow)); }
 #hive-general li { --c: var(--hex-gen); --c-hi: var(--hex-gen-hi); }
 .hex { position: relative; isolation: isolate; width: var(--hw); height: var(--hh);
   border: 0; padding: 0 12px; cursor: pointer; font: inherit; color: var(--hex-ink);
