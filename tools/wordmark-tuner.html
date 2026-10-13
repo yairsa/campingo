@@ -1,0 +1,193 @@
+<!doctype html>
+<!-- The CampinGo wordmark tuner (docs/campingo-plan.md §4.5): Yair moves the sliders, then Save downloads
+     wordmark-settings.json, which Claude reads and turns into index.html's #wm-i-pine / #wm-tent-dome. Not part of the site. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wordmark tuner</title>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #1f2421; --muted: #5b625e; --line: #dcdcd4; }
+  body { margin: 0; font: 15px/1.4 "Assistant", Arial, sans-serif; color: var(--ink); background: #fff; }
+  .wrap { display: grid; grid-template-columns: 340px 1fr; gap: 0; min-height: 100vh; }
+  .ctl { border-right: 1px solid var(--line); padding: 12px 14px; overflow-y: auto; max-height: 100vh; position: sticky; top: 0; background: #fafaf7; }
+  .ctl h2 { font-size: 1rem; margin: 16px 0 6px; border-bottom: 1px solid var(--line); padding-bottom: 2px; }
+  .row { display: grid; grid-template-columns: 120px 1fr 44px; align-items: center; gap: 6px; margin: 3px 0; }
+  .row label { font-size: .88rem; color: var(--muted); }
+  .row output { font-variant-numeric: tabular-nums; text-align: right; font-size: .85rem; }
+  .row input[type=color] { width: 100%; height: 24px; border: 0; padding: 0; background: none; }
+  .btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+  button { font: inherit; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid #1d6b57; background: #e3f0eb; color: #1d6b57; cursor: pointer; }
+  button.main { background: #1d6b57; color: #fff; }
+  #msg { font-size: .85rem; color: #1d6b57; min-height: 1.2em; margin-top: 6px; }
+  .view { padding: 16px; display: grid; gap: 14px; align-content: start; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .view, .pair > div { min-width: 0; }
+  .box { border-radius: 16px; padding: 18px 20px; overflow: hidden; }
+  .cap { font-size: .8rem; color: var(--muted); margin: 0 0 4px; }
+  .hero-l { background: linear-gradient(160deg, #1d6b57, #2f8f74); color: #fff; }
+  .hero-d { background: linear-gradient(160deg, #1f3a31, #2b5546); color: #ecefec; }
+  .head-l { background: #f6f5f1; color: #1f2421; }
+  .head-d { background: #151816; color: #ecefec; }
+  .wm { display: inline-block; direction: ltr; white-space: nowrap; font-weight: 700; letter-spacing: .5px; line-height: 1.1; }
+  .wm svg { height: 1em; vertical-align: baseline; overflow: visible; fill: currentColor; }
+  .head-l .wm svg { color: #1d6b57; } .head-d .wm svg { color: #6cc4a8; }
+  .big { font-size: clamp(56px, 8.5vw, 150px); }
+  .hero-size { font-size: 44.8px; } .head-size { font-size: 20.8px; }
+  .guides { position: relative; }
+  .guides i { position: absolute; left: 0; right: 0; border-top: 1px dashed rgba(255, 255, 255, .45); pointer-events: none; }
+  pre { background: #f3f3ee; border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-size: 11px; white-space: pre-wrap; word-break: break-all; max-height: 160px; overflow: auto; }
+  @media (max-width: 800px) { .wrap { grid-template-columns: 1fr; } .ctl { position: static; max-height: none; } .pair { grid-template-columns: 1fr; } .big { font-size: 15vw; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="ctl" id="ctl"></div>
+  <div class="view">
+    <div class="pair">
+      <div><p class="cap">Home title, light (sun) — zoomed, dashed lines: x-height and cap height</p><div class="box hero-l big guides" id="bigL"></div></div>
+      <div><p class="cap">Home title, dark (moon) — zoomed</p><div class="box hero-d big" id="bigD"></div></div>
+    </div>
+    <div class="pair">
+      <div><p class="cap">Home title on a phone, light</p><div class="box hero-l hero-size" id="heroL"></div></div>
+      <div><p class="cap">Home title on a phone, dark</p><div class="box hero-d hero-size" id="heroD"></div></div>
+    </div>
+    <div class="pair">
+      <div><p class="cap">Header on a view, light</p><div class="box head-l head-size" id="headL"></div></div>
+      <div><p class="cap">Header on a view, dark</p><div class="box head-d head-size" id="headD"></div></div>
+    </div>
+    <div><p class="cap">What goes into the site (Save sends Claude the numbers; this is for checking)</p><pre id="out"></pre></div>
+  </div>
+</div>
+<script>
+// units: 100 = 1em; the baseline is y = 100, so the font's x-height is about y = 50 and its caps about y = 30
+const SPEC = [
+  ['The i: pine tree', [
+    ['treeX', 'centre x', 0, 30, 0.5, 10],
+    ['treeTop', 'tip (y)', 0, 70, 0.5, 34],
+    ['treeW', 'width', 6, 40, 0.5, 20],
+    ['tiers', 'tiers', 1, 4, 1, 2],
+    ['tierStep', 'tier overlap', 0.3, 1, 0.05, 0.6],
+    ['trunkH', 'trunk height', 0, 40, 0.5, 12],
+    ['trunkW', 'trunk width', 2, 16, 0.5, 6]]],
+  ['The dot: sun (light) / moon (dark)', [
+    ['dotX', 'centre x', -10, 40, 0.5, 10],
+    ['dotY', 'centre y', -10, 50, 0.5, 18],
+    ['dotR', 'radius', 2, 20, 0.5, 8],
+    ['glowR', 'glow radius', 0, 30, 0.5, 13],
+    ['glowOp', 'glow strength', 0, 1, 0.02, 0.28],
+    ['moonCut', 'moon thinness', 0.1, 1, 0.02, 0.55],
+    ['moonTilt', 'moon tilt', -90, 90, 1, -30],
+    ['sun', 'sun colour', 'color', '#f2a531'],
+    ['moon', 'moon colour', 'color', '#f3e3b0']]],
+  ['The n: dome tent', [
+    ['domeX', 'left edge (gap)', 10, 50, 0.5, 26],
+    ['domeW', 'width', 30, 110, 0.5, 66],
+    ['domeTop', 'top (y)', 0, 70, 0.5, 38],
+    ['shoulder', 'roundness', 0, 1, 0.02, 0.6],
+    ['flapW', 'front panel width', 0, 100, 0.5, 26],
+    ['flapRound', 'front panel roundness', 0, 1, 0.02, 0.3],
+    ['flapOp', 'panel shade (light)', 0, 1, 0.02, 0.72],
+    ['flapOpD', 'panel shade (dark)', 0, 1, 0.02, 0.72],
+    ['doorW', 'door width', 0, 40, 0.5, 16],
+    ['doorH', 'door height', 0, 60, 0.5, 18]]],
+  ['Overall', [
+    ['endPad', 'space before "Go"', -10, 30, 0.5, 4],
+    ['lift', 'raise / lower', -15, 15, 0.5, 0]]],
+];
+const KEY = 'campingo-wordmark-tuner';
+const P = {};
+SPEC.forEach(([, rows]) => rows.forEach(r => { P[r[0]] = r[2] === 'color' ? r[3] : r[5]; }));
+try { Object.assign(P, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+
+const ctl = document.getElementById('ctl');
+ctl.innerHTML = '<h1 style="font-size:1.2rem;margin:4px 0">CampinGo wordmark</h1>';
+SPEC.forEach(([title, rows]) => {
+  ctl.insertAdjacentHTML('beforeend', `<h2>${title}</h2>`);
+  rows.forEach(r => {
+    const [k, label] = r;
+    const input = r[2] === 'color' ? `<input type="color" id="${k}" value="${P[k]}">`
+      : `<input type="range" id="${k}" min="${r[2]}" max="${r[3]}" step="${r[4]}" value="${P[k]}">`;
+    ctl.insertAdjacentHTML('beforeend', `<div class="row"><label for="${k}">${label}</label>${input}<output id="${k}-o"></output></div>`);
+  });
+});
+ctl.insertAdjacentHTML('beforeend', `<div class="btns"><button class="main" id="save">Save (for Claude)</button><button id="copy">Copy</button><button id="reset">Reset</button></div><div id="msg"></div>`);
+ctl.addEventListener('input', e => { const k = e.target.id; if (!(k in P)) return;
+  P[k] = e.target.type === 'color' ? e.target.value : +e.target.value; draw(); });
+
+const f = (n) => +(+n).toFixed(1);
+function tree(p) {
+  const base = 100 - p.trunkH, h = base - p.treeTop, n = p.tiers;
+  const tierH = h / (1 + (n - 1) * p.tierStep);
+  let d = '';
+  for (let k = 0; k < n; k++) {
+    const top = p.treeTop + k * p.tierStep * tierH, bot = top + tierH, w = p.treeW * (0.55 + 0.45 * (k + 1) / n);
+    d += `M${f(p.treeX)} ${f(top)}L${f(p.treeX + w / 2)} ${f(bot)}H${f(p.treeX - w / 2)}z`;
+  }
+  const trunk = p.trunkH > 0 ? `<rect x="${f(p.treeX - p.trunkW / 2)}" y="${f(base - 1)}" width="${f(p.trunkW)}" height="${f(p.trunkH + 1)}"/>` : '';
+  return `<path d="${d}"/>${trunk}`;
+}
+function moonPath(p) {        // a crescent: the dot's circle minus a shifted circle, as a polygon
+  const R = p.dotR, r = R * 0.95, off = R * (1.1 - p.moonCut), a = p.moonTilt * Math.PI / 180;
+  const cx = p.dotX, cy = p.dotY, ox = cx + off * Math.cos(a), oy = cy + off * Math.sin(a);
+  const pts = [];
+  const inC2 = (x, y) => (x - ox) ** 2 + (y - oy) ** 2 < r * r;
+  for (let i = 0; i < 180; i++) { const t = i / 180 * 2 * Math.PI, x = cx + R * Math.cos(t), y = cy + R * Math.sin(t); if (!inC2(x, y)) pts.push([t, x, y]); }
+  if (!pts.length) return '';
+  // walk the outer arc from one tip to the other, then back along the inner arc
+  let start = 0; for (let i = 0; i < pts.length; i++) { const prev = pts[(i - 1 + pts.length) % pts.length]; if (Math.abs(pts[i][0] - prev[0]) > 0.05 && Math.abs(Math.abs(pts[i][0] - prev[0]) - 2 * Math.PI) > 0.05) { start = i; break; } }
+  const outer = pts.slice(start).concat(pts.slice(0, start)).map(q => [q[1], q[2]]);
+  const [x0, y0] = outer[0], [x1, y1] = outer[outer.length - 1];
+  let t0 = Math.atan2(y1 - oy, x1 - ox), t1 = Math.atan2(y0 - oy, x0 - ox);
+  const inner = []; let dt = t1 - t0; if (dt > 0) dt -= 2 * Math.PI;
+  for (let i = 0; i <= 40; i++) { const t = t0 + dt * i / 40, x = ox + r * Math.cos(t), y = oy + r * Math.sin(t); if ((x - cx) ** 2 + (y - cy) ** 2 <= R * R + 0.5) inner.push([x, y]); }
+  return 'M' + outer.concat(inner).map(q => f(q[0]) + ' ' + f(q[1])).join('L') + 'z';
+}
+function dome(x0, x1, top, s) {
+  const cx = (x0 + x1) / 2, hw = (x1 - x0) / 2, h = 100 - top;
+  return `M${f(x0)} 100C${f(x0)} ${f(top + h * (1 - s))} ${f(cx - hw * s)} ${f(top)} ${f(cx)} ${f(top)}S${f(x1)} ${f(top + h * (1 - s))} ${f(x1)} 100z`;
+}
+function tent(p) {
+  const cx = p.domeX + p.domeW / 2, flap = dome(cx - p.flapW / 2, cx + p.flapW / 2, p.domeTop, p.flapRound);
+  const r = p.doorW / 2, door = p.doorW > 0 && p.doorH > 0
+    ? `M${f(cx - r)} 100V${f(100 - Math.max(p.doorH, r) + r)}A${f(r)} ${f(r)} 0 0 1 ${f(cx + r)} ${f(100 - Math.max(p.doorH, r) + r)}V100z` : '';
+  return `<path fill-rule="evenodd" d="${dome(p.domeX, p.domeX + p.domeW, p.domeTop, p.shoulder)}${p.flapW > 0 ? flap : ''}"/>` +
+    (p.flapW > 0 ? `<path class="wm-flap" fill-rule="evenodd" d="${flap}${door}"/>` : '');
+}
+function svg(p, dark) {
+  const w = f(p.domeX + p.domeW + p.endPad);
+  const dot = dark
+    ? `<circle cx="${f(p.dotX)}" cy="${f(p.dotY)}" r="${f(p.glowR)}" fill="${p.moon}" opacity="${p.glowOp}"/><path d="${moonPath(p)}" fill="${p.moon}"/>`
+    : `<circle cx="${f(p.dotX)}" cy="${f(p.dotY)}" r="${f(p.glowR)}" fill="${p.sun}" opacity="${p.glowOp}"/><circle cx="${f(p.dotX)}" cy="${f(p.dotY)}" r="${f(p.dotR)}" fill="${p.sun}"/>`;
+  return `<svg viewBox="0 ${-p.lift} ${w} 100" style="width:${w / 100}em" aria-hidden="true">${tree(p)}${dot}<g style="--o:${dark ? p.flapOpD : p.flapOp}">${tent(p).replace(/class="wm-flap"/, `opacity="${dark ? p.flapOpD : p.flapOp}"`)}</g></svg>`;
+}
+const word = (p, dark) => `<span class="wm">Camp${svg(p, dark)}Go</span>`;
+function draw() {
+  SPEC.forEach(([, rows]) => rows.forEach(r => { const o = document.getElementById(r[0] + '-o'); if (o) o.textContent = r[2] === 'color' ? '' : P[r[0]]; }));
+  for (const [id, dark] of [['bigL', 0], ['heroL', 0], ['headL', 0], ['bigD', 1], ['heroD', 1], ['headD', 1]]) document.getElementById(id).innerHTML = word(P, dark);
+  document.getElementById('bigL').insertAdjacentHTML('beforeend', guides());
+  try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {}
+  document.getElementById('out').textContent = JSON.stringify(P);
+}
+function guides() {   // dashed lines at the font's real x-height and cap height, measured from the letters
+  const box = document.getElementById('bigL'), wm = box.querySelector('.wm'); if (!wm) return '';
+  const c = document.createElement('canvas').getContext('2d'); const fs = parseFloat(getComputedStyle(box).fontSize);
+  c.font = `700 ${fs}px Assistant`; const x = c.measureText('x'), C = c.measureText('C');
+  const base = wm.querySelector('svg').getBoundingClientRect().bottom - box.getBoundingClientRect().top - box.clientTop;
+  return `<i style="top:${base - x.actualBoundingBoxAscent}px"></i><i style="top:${base - C.actualBoundingBoxAscent}px"></i><i style="top:${base}px"></i>`;
+}
+document.getElementById('save').onclick = () => {
+  const a = document.createElement('a'); a.download = 'wordmark-settings.json';
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(P, null, 2)], { type: 'application/json' })); a.click();
+  document.getElementById('msg').textContent = 'Saved to Downloads as wordmark-settings.json — tell Claude.';
+};
+document.getElementById('copy').onclick = async () => {
+  try { await navigator.clipboard.writeText(JSON.stringify(P)); document.getElementById('msg').textContent = 'Copied — paste it to Claude.'; }
+  catch (e) { document.getElementById('msg').textContent = 'Copy failed; use Save.'; }
+};
+document.getElementById('reset').onclick = () => { try { localStorage.removeItem(KEY); } catch (e) {} location.reload(); };
+document.fonts.ready.then(draw); draw();
+</script>
+</body>
+</html>
