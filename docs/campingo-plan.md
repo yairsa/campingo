@@ -2,7 +2,7 @@
 
 > **Open questions for Yair** (hand-kept): none open (§4.4's go-ahead answered 14/10/2026). His 13/10/2026 answers are in §1.
 
-**Status:** §4.1–4.4 done and live 14/10/2026 at https://yairsa.github.io/campingo/ (merge `235bb74`); the old address forwards. Left: Yair's backend deploy of the new `Code.gs`. Next: §4.5 (the tent in the wordmark).
+**Status:** §4.1–4.4 done and live 14/10/2026 at https://yairsa.github.io/campingo/ (merge `235bb74`); the old address forwards. Left: Yair's backend deploy of the new `Code.gs`. §4.5 (the wordmark, the camp by day/night, 3D buttons) live 15/10/2026 (merge `99938fb`).
 
 ## 1. The brief (Yair, 13/10/2026)
 
@@ -83,4 +83,4 @@ Answers, 13/10/2026 (AskUserQuestion):
 - [x] Buttons look 3D, with a glow (Yair, 14/10/2026: *"also i want the button design etc look some 3d, with glow"*): the hive hexagons first (bevel/gradient, depth shadow via `filter: drop-shadow` since `clip-path` cuts box-shadow, a soft glow on hover/focus), then the other buttons to match; light + dark; screenshots with the wordmark variants
 - [x] The chosen wordmark on the home page (`#home-title`) and in the header `.brand` on views; `tests/layout.e2e.js` asserts the title by its accessible name, not `textContent`
   - Done `c8307ee`; Yair approved it 14/10/2026 (*"only remove the רשימת ציוד button glow, and go live"*). The hexagons have no hover glow (`f9824ff`): on a phone a tap leaves the hover on. The other buttons keep theirs.
-- [ ] Gate: all repo gates + `stamp.py`; land on `main` (pushes live); live check
+- [x] Gate: all repo gates + `stamp.py`; land on `main` (pushes live); live check: merge `99938fb`, live after ~70s on 15/10/2026; headless 360px light + dark: no errors, no sideways scroll, the h1 named "CampinGo", the sun by day and the moon by night; the old address still forwards
