@@ -2,7 +2,7 @@
 
 > **Open questions for Yair** (hand-kept): none open (§4.4's go-ahead answered 14/10/2026). His 13/10/2026 answers are in §1.
 
-**Status:** done and live 14/10/2026 at https://yairsa.github.io/campingo/ (merge `235bb74`); the old address forwards. Left: Yair's backend deploy of the new `Code.gs`.
+**Status:** §4.1–4.4 done and live 14/10/2026 at https://yairsa.github.io/campingo/ (merge `235bb74`); the old address forwards. Left: Yair's backend deploy of the new `Code.gs`. Next: §4.5 (the tent in the wordmark).
 
 ## 1. The brief (Yair, 13/10/2026)
 
@@ -71,3 +71,10 @@ Answers, 13/10/2026 (AskUserQuestion):
 - [x] Merge `feat/campingo` to `main` together with §4.1's rename; live check on the new address (home, a button, an old link forwarding) — `235bb74`, live 14/10/2026: home shows חאן בארות 12/11 עד 14/11/2026, gear opens and → ראשי returns, old links forward
   - `Code.gs` put on Yair's clipboard 14/10/2026 (the calc tour); his deploy. Until he deploys, the site shows the built-in calculator tour texts.
 - [x] Gate: live check passes; `docs/campsites-plan.md` and `CLAUDE.md` name the new address
+
+#### 4.5 The tent in the wordmark (Yair, 14/10/2026)
+> *"i love the campingo tent sybol, in header https://yairsa.github.io/campingo/#calc — it should also be in the main page. lets try adding the tent inside the text itself: Camp<tent looking like In>Go. the I is a landing flag? a camp lamp? something else?"*
+- [ ] Wordmark variants: "Camp" + an inline SVG where the tent shape forms the "n" and a tall slim element forms the "i" (try 3: a flag on a pole, a camp lantern, a tent peg/pole with the sun as the i's dot, reusing the logo's `--sun`), + "Go"; keep an accessible name "CampinGo" (`aria-label` / visually hidden text). Screenshots of all 3 at 360px and desktop, light and dark, sent to Yair to pick
+  - Today: the logo is `.brand-logo` (header, hidden on home by `body[data-view="home"] .brand { visibility: hidden }`); the hero title is plain text `#home-title`.
+- [ ] The chosen wordmark on the home page (`#home-title`) and in the header `.brand` on views; `tests/layout.e2e.js` asserts the title by its accessible name, not `textContent`
+- [ ] Gate: all repo gates + `stamp.py`; land on `main` (pushes live); live check
