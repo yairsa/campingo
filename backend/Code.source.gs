@@ -67,7 +67,7 @@ function doPost(e) {
     if (req && /^admin/.test(req.action)) {
       var ares = route(req, sheetStore_, tipsStore_(), activitiesStore_(), adminStore_());
       if (ares.ok && FAMILY_WRITES[req.action]) {
-        try { syncOrganizers_(ares.trip); } catch (x) { /* the organizers' copy must never break a change */ }
+        syncSafe_(ares.trip);                          // never throws: the organizers' copy must never break a change
       } else if (ares.ok && !ADMIN_READS[req.action]) {
         CacheService.getScriptCache().removeAll([TIPS_CACHE, GEAR_CACHE, ACTS_CACHE, TOUR_CACHE]);   // the site shows it at once
       }
@@ -78,7 +78,7 @@ function doPost(e) {
     var res = route(req, tipAction ? null : sheetStore_, tipAction ? tipsStore_() : null, actAction ? activitiesStore_() : null);
     if (res.ok && actAction) CacheService.getScriptCache().remove(ACTS_CACHE);
     if (res.ok && (req.action === 'save' || req.action === 'delete' || actAction)) {
-      try { syncOrganizers_(res.trip); } catch (x) { /* the organizers' copy must never break a registration */ }
+      syncSafe_(res.trip);                             // never throws: the organizers' copy must never break a registration
     }
     return json_(res);
   } finally { lock.releaseLock(); }
@@ -336,6 +336,37 @@ function syncAllOrganizers_() {
   if (currentTrip_() !== DEFAULT_TRIP) ok = syncOrganizers_(currentTrip_()) && ok;
   return ok;
 }
+// Every sync goes through here (docs/organizers-sync-plan.md): it never throws, and it records the outcome in the
+// script property ORG_SYNC ({at, ok, error, trip}) so the 2-hour run can catch up and report. trip '*' = every trip.
+var ORG_SYNC = 'ORG_SYNC', ORG_ALERTED = 'ORG_SYNC_ALERTED';
+function syncSafe_(trip) {
+  var rec = { trip: trip || DEFAULT_TRIP };
+  try {
+    rec.ok = !!(trip === '*' ? syncAllOrganizers_() : syncOrganizers_(trip));
+    rec.error = rec.ok ? '' : 'not_connected';
+  } catch (x) {
+    rec.ok = false;
+    rec.error = String((x && x.message) || x || 'error').slice(0, 300);
+  }
+  rec.at = new Date().toISOString();
+  try { PropertiesService.getScriptProperties().setProperty(ORG_SYNC, JSON.stringify(rec)); } catch (x) { /* recording must never break a write */ }
+  return rec;
+}
+// The email for a failed sync, once per distinct error: null when it worked or this error was already reported.
+// alerted = the error text last emailed ('' = none). Returns {subject, body, alerted} (alerted = what to store).
+function syncAlert_(rec, alerted, sheetUrl) {
+  if (!rec || rec.ok) return alerted ? { alerted: '' } : null;     // a success clears it, so the next failure mails again
+  if (rec.error === alerted) return null;
+  var why = rec.error === 'not_connected'
+    ? 'עוד לא חובר גיליון מארגנים. בגיליון ההרשמות: מארגנים ← חיבור לגיליון המארגנים.'
+    : 'השגיאה: ' + rec.error + '\nאם זו הרשאה חסרה: בגיליון ההרשמות, מארגנים ← הפעלת התראות, ואשרו את ההרשאות שגוגל מבקש.';
+  return {
+    subject: 'CampinGo: גיליון המארגנים לא מתעדכן',
+    body: 'הסנכרון האוטומטי של גיליון המארגנים נכשל.\n\n' + why +
+      '\n\nהסנכרון ינסה שוב בעצמו כל שעתיים. המייל הזה לא יישלח שוב על אותה שגיאה.\n\n' + (sheetUrl || ''),
+    alerted: rec.error
+  };
+}
 function syncOrganizers_(trip) {
   trip = trip || DEFAULT_TRIP;
   var T = orgTabs_(trip);
@@ -423,7 +454,7 @@ function addDemoActivities() {
   try {
     n = addDemoActivities_(activitiesStore_());
     CacheService.getScriptCache().remove(ACTS_CACHE);
-    try { syncOrganizers_(); } catch (x) { /* the organizers' copy must never block this */ }
+    syncSafe_();                                       // never throws: the organizers' copy must never block this
   } finally { lock.releaseLock(); }
   SpreadsheetApp.getActiveSpreadsheet().toast(n ? 'נוספו ' + n + ' פעילויות לדוגמה.' : 'הפעילויות לדוגמה כבר קיימות.');
 }
@@ -434,12 +465,15 @@ function connectOrganizers() {
   var m = /\/d\/([a-zA-Z0-9_-]{20,})/.exec(r.getResponseText()) || /^([a-zA-Z0-9_-]{20,})$/.exec(r.getResponseText().trim());
   if (!m) { ui.alert('לא זיהיתי קישור של Google Sheets.'); return; }
   PropertiesService.getScriptProperties().setProperty(ORG_PROP, m[1]);
-  syncAllOrganizers_();
-  ui.alert('מחובר. גיליון המארגנים מתעדכן אחרי כל הרשמה, עדכון או ביטול.');
+  var rec = syncSafe_('*');
+  ui.alert(rec.ok ? 'מחובר. גיליון המארגנים מתעדכן אחרי כל הרשמה, עדכון או ביטול, ובכל מקרה כל שעתיים.'
+    : 'החיבור נשמר, אבל הסנכרון נכשל: ' + rec.error);
 }
 function syncNow() {
   var ui = SpreadsheetApp.getUi();
-  ui.alert(syncAllOrganizers_() ? 'גיליון המארגנים עודכן.' : 'עוד לא חובר גיליון מארגנים — מארגנים ← חיבור לגיליון המארגנים.');
+  var rec = syncSafe_('*');
+  ui.alert(rec.ok ? 'גיליון המארגנים עודכן.' : rec.error === 'not_connected'
+    ? 'עוד לא חובר גיליון מארגנים — מארגנים ← חיבור לגיליון המארגנים.' : 'הסנכרון נכשל: ' + rec.error);
 }
 
 // ---------- tips (docs/tips-plan.md) ----------
@@ -763,19 +797,26 @@ function onEdit(e) {
   CacheService.getScriptCache().removeAll([TIPS_CACHE, GEAR_CACHE]);
 }
 
-// Time trigger (every 2 hours, installed by enableAlerts): email the owner if something new waits.
+// Time trigger (every 2 hours, installed by enableAlerts): re-sync the organizers' sheet (mail once if that fails),
+// and email the owner if something new waits.
 function sendDigest() {
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
-  var d, props = PropertiesService.getScriptProperties();
+  var d, rec, props = PropertiesService.getScriptProperties(), url = SpreadsheetApp.getActiveSpreadsheet().getUrl();
   try {
+    rec = syncSafe_('*');                    // catches up a failed sync and hand edits (organizers-sync-plan §3)
     var ts = tipsStore_();
     housekeep_(ts);
     var seen = {};
     try { seen = JSON.parse(props.getProperty('DIGEST_SEEN') || '{}'); } catch (x) { /* start over */ }
-    d = pendingDigest_(ts, seen, SpreadsheetApp.getActiveSpreadsheet().getUrl());
+    d = pendingDigest_(ts, seen, url);
   } finally { lock.releaseLock(); }
   CacheService.getScriptCache().removeAll([TIPS_CACHE, GEAR_CACHE]);
+  var a = syncAlert_(rec, props.getProperty(ORG_ALERTED) || '', url);
+  if (a) {
+    if (a.subject) MailApp.sendEmail(Session.getEffectiveUser().getEmail(), a.subject, a.body);
+    props.setProperty(ORG_ALERTED, a.alerted);
+  }
   if (!d) return;
   MailApp.sendEmail(Session.getEffectiveUser().getEmail(), d.subject, d.body);
   props.setProperty('DIGEST_SEEN', JSON.stringify(d.seen));
@@ -791,7 +832,8 @@ function enableAlerts() {
   tipsStore_().comments();
   tipsStore_().gear();
   tipsStore_().tour();                       // הדרכה, written with the site's tour texts
-  SpreadsheetApp.getUi().alert('התראות הופעלו: כל שעתיים, אם הגיע משהו חדש לאישור, יישלח אליך מייל אחד עם כל הממתינים.');
+  SpreadsheetApp.getUi().alert('התראות הופעלו: כל שעתיים, אם הגיע משהו חדש לאישור, יישלח אליך מייל אחד עם כל הממתינים. ' +
+    'באותה ריצה גיליון המארגנים מסתנכרן, ואם הסנכרון נכשל יישלח מייל.');
 }
 
 // ---------- activities (docs/activities-plan.md) ----------

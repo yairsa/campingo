@@ -1204,3 +1204,52 @@ console.log('admin registration tests passed');
   ctx.window.CAMP.tripId = was;
 }
 console.log('trip tests passed');
+
+// ---------- organizers' sync: the outcome is recorded, a failure mails once (docs/organizers-sync-plan.md §3) ----------
+{
+  const props = {}, real = { one: ctx.syncOrganizers_, all: ctx.syncAllOrganizers_, P: ctx.PropertiesService };
+  ctx.PropertiesService = { getScriptProperties: () => ({ getProperty: k => props[k] || null, setProperty: (k, v) => { props[k] = v; } }) };
+  const rec = () => JSON.parse(props.ORG_SYNC);
+  let calls = [];
+  ctx.syncOrganizers_ = (t) => { calls.push(t); return true; };
+  let r = ctx.syncSafe_('beerot');
+  assert.ok(r.ok && r.error === '' && r.trip === 'beerot'); assert.deepStrictEqual(calls, ['beerot']);
+  assert.deepStrictEqual(rec(), JSON.parse(JSON.stringify(r))); assert.ok(!isNaN(Date.parse(rec().at)));
+  assert.strictEqual(ctx.syncSafe_().trip, ctx.DEFAULT_TRIP);                    // no trip = the default one
+
+  ctx.syncOrganizers_ = () => { throw new Error('You do not have permission to call SpreadsheetApp.openById'); };
+  r = ctx.syncSafe_('beerot');                                                     // never throws
+  assert.ok(!r.ok && /permission/.test(r.error)); assert.strictEqual(rec().error, r.error);
+  ctx.syncOrganizers_ = () => { throw 'x'.repeat(500); };
+  assert.strictEqual(ctx.syncSafe_().error.length, 300);                          // a long error is cut
+
+  ctx.syncOrganizers_ = () => false;                                               // ORG_SHEET_ID unset
+  assert.strictEqual(ctx.syncSafe_().error, 'not_connected'); assert.strictEqual(rec().ok, false);
+
+  calls = [];
+  ctx.syncAllOrganizers_ = () => { calls.push('*'); return true; };
+  assert.ok(ctx.syncSafe_('*').ok); assert.deepStrictEqual(calls, ['*']);         // '*' = every trip
+
+  ctx.PropertiesService = { getScriptProperties: () => { throw new Error('quota'); } };
+  assert.ok(ctx.syncSafe_('*').ok);                                                // recording failure is swallowed too
+
+  // the alert: once per distinct error, cleared by a success
+  const bad = { ok: false, error: 'boom' }, good = { ok: true, error: '' };
+  let a = ctx.syncAlert_(bad, '', 'https://sheet');
+  assert.ok(a.subject && a.body.includes('boom') && a.body.includes('https://sheet')); assert.strictEqual(a.alerted, 'boom');
+  assert.strictEqual(ctx.syncAlert_(bad, 'boom'), null);                          // same error: no second mail
+  assert.strictEqual(ctx.syncAlert_({ ok: false, error: 'other' }, 'boom').alerted, 'other');
+  assert.deepStrictEqual(P(ctx.syncAlert_(good, 'boom')), { alerted: '' });       // success clears, no mail
+  assert.strictEqual(ctx.syncAlert_(good, ''), null);
+  assert.strictEqual(ctx.syncAlert_(undefined, ''), null);
+  const nc = ctx.syncAlert_({ ok: false, error: 'not_connected' }, '');
+  assert.ok(nc.subject && !nc.body.includes('not_connected'));                    // explained, not the code
+
+  // every call site goes through the wrapper: no bare syncOrganizers_ outside syncSafe_ / syncAllOrganizers_
+  const src = fs.readFileSync(__dirname + '/../backend/Code.source.gs', 'utf8');
+  assert.strictEqual((src.match(/syncOrganizers_\(/g) || []).length, 4, 'syncOrganizers_ called outside the wrapper');
+  assert.ok(/function sendDigest\(\)[\s\S]{0,400}syncSafe_\('\*'\)/.test(src), 'sendDigest does not re-sync');
+
+  Object.assign(ctx, { syncOrganizers_: real.one, syncAllOrganizers_: real.all, PropertiesService: real.P });
+}
+console.log('organizers sync tests passed');

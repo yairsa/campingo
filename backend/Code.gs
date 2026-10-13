@@ -68,7 +68,7 @@ function doPost(e) {
     if (req && /^admin/.test(req.action)) {
       var ares = route(req, sheetStore_, tipsStore_(), activitiesStore_(), adminStore_());
       if (ares.ok && FAMILY_WRITES[req.action]) {
-        try { syncOrganizers_(ares.trip); } catch (x) { /* the organizers' copy must never break a change */ }
+        syncSafe_(ares.trip);                          // never throws: the organizers' copy must never break a change
       } else if (ares.ok && !ADMIN_READS[req.action]) {
         CacheService.getScriptCache().removeAll([TIPS_CACHE, GEAR_CACHE, ACTS_CACHE, TOUR_CACHE]);   // the site shows it at once
       }
@@ -79,7 +79,7 @@ function doPost(e) {
     var res = route(req, tipAction ? null : sheetStore_, tipAction ? tipsStore_() : null, actAction ? activitiesStore_() : null);
     if (res.ok && actAction) CacheService.getScriptCache().remove(ACTS_CACHE);
     if (res.ok && (req.action === 'save' || req.action === 'delete' || actAction)) {
-      try { syncOrganizers_(res.trip); } catch (x) { /* the organizers' copy must never break a registration */ }
+      syncSafe_(res.trip);                             // never throws: the organizers' copy must never break a registration
     }
     return json_(res);
   } finally { lock.releaseLock(); }
@@ -337,6 +337,37 @@ function syncAllOrganizers_() {
   if (currentTrip_() !== DEFAULT_TRIP) ok = syncOrganizers_(currentTrip_()) && ok;
   return ok;
 }
+// Every sync goes through here (docs/organizers-sync-plan.md): it never throws, and it records the outcome in the
+// script property ORG_SYNC ({at, ok, error, trip}) so the 2-hour run can catch up and report. trip '*' = every trip.
+var ORG_SYNC = 'ORG_SYNC', ORG_ALERTED = 'ORG_SYNC_ALERTED';
+function syncSafe_(trip) {
+  var rec = { trip: trip || DEFAULT_TRIP };
+  try {
+    rec.ok = !!(trip === '*' ? syncAllOrganizers_() : syncOrganizers_(trip));
+    rec.error = rec.ok ? '' : 'not_connected';
+  } catch (x) {
+    rec.ok = false;
+    rec.error = String((x && x.message) || x || 'error').slice(0, 300);
+  }
+  rec.at = new Date().toISOString();
+  try { PropertiesService.getScriptProperties().setProperty(ORG_SYNC, JSON.stringify(rec)); } catch (x) { /* recording must never break a write */ }
+  return rec;
+}
+// The email for a failed sync, once per distinct error: null when it worked or this error was already reported.
+// alerted = the error text last emailed ('' = none). Returns {subject, body, alerted} (alerted = what to store).
+function syncAlert_(rec, alerted, sheetUrl) {
+  if (!rec || rec.ok) return alerted ? { alerted: '' } : null;     // a success clears it, so the next failure mails again
+  if (rec.error === alerted) return null;
+  var why = rec.error === 'not_connected'
+    ? '\u05e2\u05d5\u05d3 \u05dc\u05d0 \u05d7\u05d5\u05d1\u05e8 \u05d2\u05d9\u05dc\u05d9\u05d5\u05df \u05de\u05d0\u05e8\u05d2\u05e0\u05d9\u05dd. \u05d1\u05d2\u05d9\u05dc\u05d9\u05d5\u05df \u05d4\u05d4\u05e8\u05e9\u05de\u05d5\u05ea: \u05de\u05d0\u05e8\u05d2\u05e0\u05d9\u05dd \u2190 \u05d7\u05d9\u05d1\u05d5\u05e8 \u05dc\u05d2\u05d9\u05dc\u05d9\u05d5\u05df \u05d4\u05de\u05d0\u05e8\u05d2\u05e0\u05d9\u05dd.'
+    : '\u05d4\u05e9\u05d2\u05d9\u05d0\u05d4: ' + rec.error + '\n\u05d0\u05dd \u05d6\u05d5 \u05d4\u05e8\u05e9\u05d0\u05d4 \u05d7\u05e1\u05e8\u05d4: \u05d1\u05d2\u05d9\u05dc\u05d9\u05d5\u05df \u05d4\u05d4\u05e8\u05e9\u05de\u05d5\u05ea, \u05de\u05d0\u05e8\u05d2\u05e0\u05d9\u05dd \u2190 \u05d4\u05e4\u05e2\u05dc\u05ea \u05d4\u05ea\u05e8\u05d0\u05d5\u05ea, \u05d5\u05d0\u05e9\u05e8\u05d5 \u05d0\u05ea \u05d4\u05d4\u05e8\u05e9\u05d0\u05d5\u05ea \u05e9\u05d2\u05d5\u05d2\u05dc \u05de\u05d1\u05e7\u05e9.';
+  return {
+    subject: 'CampinGo: \u05d2\u05d9\u05dc\u05d9\u05d5\u05df \u05d4\u05de\u05d0\u05e8\u05d2\u05e0\u05d9\u05dd \u05dc\u05d0 \u05de\u05ea\u05e2\u05d3\u05db\u05df',
+    body: '\u05d4\u05e1\u05e0\u05db\u05e8\u05d5\u05df \u05d4\u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9 \u05e9\u05dc \u05d2\u05d9\u05dc\u05d9\u05d5\u05df \u05d4\u05de\u05d0\u05e8\u05d2\u05e0\u05d9\u05dd \u05e0\u05db\u05e9\u05dc.\n\n' + why +
+      '\n\n\u05d4\u05e1\u05e0\u05db\u05e8\u05d5\u05df \u05d9\u05e0\u05e1\u05d4 \u05e9\u05d5\u05d1 \u05d1\u05e2\u05e6\u05de\u05d5 \u05db\u05dc \u05e9\u05e2\u05ea\u05d9\u05d9\u05dd. \u05d4\u05de\u05d9\u05d9\u05dc \u05d4\u05d6\u05d4 \u05dc\u05d0 \u05d9\u05d9\u05e9\u05dc\u05d7 \u05e9\u05d5\u05d1 \u05e2\u05dc \u05d0\u05d5\u05ea\u05d4 \u05e9\u05d2\u05d9\u05d0\u05d4.\n\n' + (sheetUrl || ''),
+    alerted: rec.error
+  };
+}
 function syncOrganizers_(trip) {
   trip = trip || DEFAULT_TRIP;
   var T = orgTabs_(trip);
@@ -424,7 +455,7 @@ function addDemoActivities() {
   try {
     n = addDemoActivities_(activitiesStore_());
     CacheService.getScriptCache().remove(ACTS_CACHE);
-    try { syncOrganizers_(); } catch (x) { /* the organizers' copy must never block this */ }
+    syncSafe_();                                       // never throws: the organizers' copy must never block this
   } finally { lock.releaseLock(); }
   SpreadsheetApp.getActiveSpreadsheet().toast(n ? '\u05e0\u05d5\u05e1\u05e4\u05d5 ' + n + ' \u05e4\u05e2\u05d9\u05dc\u05d5\u05d9\u05d5\u05ea \u05dc\u05d3\u05d5\u05d2\u05de\u05d4.' : '\u05d4\u05e4\u05e2\u05d9\u05dc\u05d5\u05d9\u05d5\u05ea \u05dc\u05d3\u05d5\u05d2\u05de\u05d4 \u05db\u05d1\u05e8 \u05e7\u05d9\u05d9\u05de\u05d5\u05ea.');
 }
@@ -435,12 +466,15 @@ function connectOrganizers() {
   var m = /\/d\/([a-zA-Z0-9_-]{20,})/.exec(r.getResponseText()) || /^([a-zA-Z0-9_-]{20,})$/.exec(r.getResponseText().trim());
   if (!m) { ui.alert('\u05dc\u05d0 \u05d6\u05d9\u05d4\u05d9\u05ea\u05d9 \u05e7\u05d9\u05e9\u05d5\u05e8 \u05e9\u05dc Google Sheets.'); return; }
   PropertiesService.getScriptProperties().setProperty(ORG_PROP, m[1]);
-  syncAllOrganizers_();
-  ui.alert('\u05de\u05d7\u05d5\u05d1\u05e8. \u05d2\u05d9\u05dc\u05d9\u05d5\u05df \u05d4\u05de\u05d0\u05e8\u05d2\u05e0\u05d9\u05dd \u05de\u05ea\u05e2\u05d3\u05db\u05df \u05d0\u05d7\u05e8\u05d9 \u05db\u05dc \u05d4\u05e8\u05e9\u05de\u05d4, \u05e2\u05d3\u05db\u05d5\u05df \u05d0\u05d5 \u05d1\u05d9\u05d8\u05d5\u05dc.');
+  var rec = syncSafe_('*');
+  ui.alert(rec.ok ? '\u05de\u05d7\u05d5\u05d1\u05e8. \u05d2\u05d9\u05dc\u05d9\u05d5\u05df \u05d4\u05de\u05d0\u05e8\u05d2\u05e0\u05d9\u05dd \u05de\u05ea\u05e2\u05d3\u05db\u05df \u05d0\u05d7\u05e8\u05d9 \u05db\u05dc \u05d4\u05e8\u05e9\u05de\u05d4, \u05e2\u05d3\u05db\u05d5\u05df \u05d0\u05d5 \u05d1\u05d9\u05d8\u05d5\u05dc, \u05d5\u05d1\u05db\u05dc \u05de\u05e7\u05e8\u05d4 \u05db\u05dc \u05e9\u05e2\u05ea\u05d9\u05d9\u05dd.'
+    : '\u05d4\u05d7\u05d9\u05d1\u05d5\u05e8 \u05e0\u05e9\u05de\u05e8, \u05d0\u05d1\u05dc \u05d4\u05e1\u05e0\u05db\u05e8\u05d5\u05df \u05e0\u05db\u05e9\u05dc: ' + rec.error);
 }
 function syncNow() {
   var ui = SpreadsheetApp.getUi();
-  ui.alert(syncAllOrganizers_() ? '\u05d2\u05d9\u05dc\u05d9\u05d5\u05df \u05d4\u05de\u05d0\u05e8\u05d2\u05e0\u05d9\u05dd \u05e2\u05d5\u05d3\u05db\u05df.' : '\u05e2\u05d5\u05d3 \u05dc\u05d0 \u05d7\u05d5\u05d1\u05e8 \u05d2\u05d9\u05dc\u05d9\u05d5\u05df \u05de\u05d0\u05e8\u05d2\u05e0\u05d9\u05dd - \u05de\u05d0\u05e8\u05d2\u05e0\u05d9\u05dd \u2190 \u05d7\u05d9\u05d1\u05d5\u05e8 \u05dc\u05d2\u05d9\u05dc\u05d9\u05d5\u05df \u05d4\u05de\u05d0\u05e8\u05d2\u05e0\u05d9\u05dd.');
+  var rec = syncSafe_('*');
+  ui.alert(rec.ok ? '\u05d2\u05d9\u05dc\u05d9\u05d5\u05df \u05d4\u05de\u05d0\u05e8\u05d2\u05e0\u05d9\u05dd \u05e2\u05d5\u05d3\u05db\u05df.' : rec.error === 'not_connected'
+    ? '\u05e2\u05d5\u05d3 \u05dc\u05d0 \u05d7\u05d5\u05d1\u05e8 \u05d2\u05d9\u05dc\u05d9\u05d5\u05df \u05de\u05d0\u05e8\u05d2\u05e0\u05d9\u05dd - \u05de\u05d0\u05e8\u05d2\u05e0\u05d9\u05dd \u2190 \u05d7\u05d9\u05d1\u05d5\u05e8 \u05dc\u05d2\u05d9\u05dc\u05d9\u05d5\u05df \u05d4\u05de\u05d0\u05e8\u05d2\u05e0\u05d9\u05dd.' : '\u05d4\u05e1\u05e0\u05db\u05e8\u05d5\u05df \u05e0\u05db\u05e9\u05dc: ' + rec.error);
 }
 
 // ---------- tips (docs/tips-plan.md) ----------
@@ -1292,19 +1326,26 @@ function onEdit(e) {
   CacheService.getScriptCache().removeAll([TIPS_CACHE, GEAR_CACHE]);
 }
 
-// Time trigger (every 2 hours, installed by enableAlerts): email the owner if something new waits.
+// Time trigger (every 2 hours, installed by enableAlerts): re-sync the organizers' sheet (mail once if that fails),
+// and email the owner if something new waits.
 function sendDigest() {
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
-  var d, props = PropertiesService.getScriptProperties();
+  var d, rec, props = PropertiesService.getScriptProperties(), url = SpreadsheetApp.getActiveSpreadsheet().getUrl();
   try {
+    rec = syncSafe_('*');                    // catches up a failed sync and hand edits (organizers-sync-plan \u00a73)
     var ts = tipsStore_();
     housekeep_(ts);
     var seen = {};
     try { seen = JSON.parse(props.getProperty('DIGEST_SEEN') || '{}'); } catch (x) { /* start over */ }
-    d = pendingDigest_(ts, seen, SpreadsheetApp.getActiveSpreadsheet().getUrl());
+    d = pendingDigest_(ts, seen, url);
   } finally { lock.releaseLock(); }
   CacheService.getScriptCache().removeAll([TIPS_CACHE, GEAR_CACHE]);
+  var a = syncAlert_(rec, props.getProperty(ORG_ALERTED) || '', url);
+  if (a) {
+    if (a.subject) MailApp.sendEmail(Session.getEffectiveUser().getEmail(), a.subject, a.body);
+    props.setProperty(ORG_ALERTED, a.alerted);
+  }
   if (!d) return;
   MailApp.sendEmail(Session.getEffectiveUser().getEmail(), d.subject, d.body);
   props.setProperty('DIGEST_SEEN', JSON.stringify(d.seen));
@@ -1320,7 +1361,8 @@ function enableAlerts() {
   tipsStore_().comments();
   tipsStore_().gear();
   tipsStore_().tour();                       // \u05d4\u05d3\u05e8\u05db\u05d4, written with the site's tour texts
-  SpreadsheetApp.getUi().alert('\u05d4\u05ea\u05e8\u05d0\u05d5\u05ea \u05d4\u05d5\u05e4\u05e2\u05dc\u05d5: \u05db\u05dc \u05e9\u05e2\u05ea\u05d9\u05d9\u05dd, \u05d0\u05dd \u05d4\u05d2\u05d9\u05e2 \u05de\u05e9\u05d4\u05d5 \u05d7\u05d3\u05e9 \u05dc\u05d0\u05d9\u05e9\u05d5\u05e8, \u05d9\u05d9\u05e9\u05dc\u05d7 \u05d0\u05dc\u05d9\u05da \u05de\u05d9\u05d9\u05dc \u05d0\u05d7\u05d3 \u05e2\u05dd \u05db\u05dc \u05d4\u05de\u05de\u05ea\u05d9\u05e0\u05d9\u05dd.');
+  SpreadsheetApp.getUi().alert('\u05d4\u05ea\u05e8\u05d0\u05d5\u05ea \u05d4\u05d5\u05e4\u05e2\u05dc\u05d5: \u05db\u05dc \u05e9\u05e2\u05ea\u05d9\u05d9\u05dd, \u05d0\u05dd \u05d4\u05d2\u05d9\u05e2 \u05de\u05e9\u05d4\u05d5 \u05d7\u05d3\u05e9 \u05dc\u05d0\u05d9\u05e9\u05d5\u05e8, \u05d9\u05d9\u05e9\u05dc\u05d7 \u05d0\u05dc\u05d9\u05da \u05de\u05d9\u05d9\u05dc \u05d0\u05d7\u05d3 \u05e2\u05dd \u05db\u05dc \u05d4\u05de\u05de\u05ea\u05d9\u05e0\u05d9\u05dd. ' +
+    '\u05d1\u05d0\u05d5\u05ea\u05d4 \u05e8\u05d9\u05e6\u05d4 \u05d2\u05d9\u05dc\u05d9\u05d5\u05df \u05d4\u05de\u05d0\u05e8\u05d2\u05e0\u05d9\u05dd \u05de\u05e1\u05ea\u05e0\u05db\u05e8\u05df, \u05d5\u05d0\u05dd \u05d4\u05e1\u05e0\u05db\u05e8\u05d5\u05df \u05e0\u05db\u05e9\u05dc \u05d9\u05d9\u05e9\u05dc\u05d7 \u05de\u05d9\u05d9\u05dc.');
 }
 
 // ---------- activities (docs/activities-plan.md) ----------
