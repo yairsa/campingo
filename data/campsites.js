@@ -1,5 +1,5 @@
 window.CAMPSITES = {
-  "checkedAt": "2026-10-22T23:32:37+03:00",
+  "checkedAt": "2026-10-24T11:32:36+03:00",
   "source": "https://www.parks.org.il/camping/ + https://secure-hotels.net/INPA/",
   "campsites": [
     {
@@ -10,7 +10,7 @@ window.CAMPSITES = {
       "region": "דרום",
       "url": "https://www.parks.org.il/camping/חניון-לילה-גן-לאומי-הבשור-אשכול/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=10",
-      "checkedAt": "2026-10-22T23:30:20+03:00",
+      "checkedAt": "2026-10-24T11:30:18+03:00",
       "facilities": [
         "תאורת שטח, תאורה מלאה (במטבח, שירותים ומקלחות) תאורה חלקית",
         "מקלחות מים חמים (5 תאי מקלחות נשים ו- 8 תאי מקלחות גברים)",
@@ -284,7 +284,7 @@ window.CAMPSITES = {
       "region": "דרום",
       "url": "https://www.parks.org.il/camping/חניון-לילה-גן-לאומי-ממשית-החאן-הנבטי/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=12",
-      "checkedAt": "2026-10-22T23:30:28+03:00",
+      "checkedAt": "2026-10-24T11:30:26+03:00",
       "facilities": [
         "תאורת שטח, תאורה מלאה",
         "מקלחות מים חמים (5 תאי מקלחות נשים ו- 5 תאי מקלחות גברים)",
@@ -589,7 +589,7 @@ window.CAMPSITES = {
       "region": "דרום",
       "url": "https://www.parks.org.il/camping/חניון-לילה-גן-לאומי-מצדה-מערב-מחנה-מצדה/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=8",
-      "checkedAt": "2026-10-22T23:30:37+03:00",
+      "checkedAt": "2026-10-24T11:30:34+03:00",
       "facilities": [
         "תאורה מלאה",
         "נקודות חשמל",
@@ -876,7 +876,7 @@ window.CAMPSITES = {
       "region": "דרום",
       "url": "https://www.parks.org.il/camping/חניון-לילה-גן-לאומי-תל-ערד-החאן-הכנעני/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=11",
-      "checkedAt": "2026-10-22T23:30:44+03:00",
+      "checkedAt": "2026-10-24T11:30:42+03:00",
       "facilities": [
         "תאורה מלאה",
         "נקודות חשמל",
@@ -1165,7 +1165,7 @@ window.CAMPSITES = {
       "region": "דרום",
       "url": "https://www.parks.org.il/camping/חניון-לילה-חאן-בארות-מכתש-רמון/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=13",
-      "checkedAt": "2026-10-22T23:30:51+03:00",
+      "checkedAt": "2026-10-24T11:30:51+03:00",
       "facilities": [
         "תאורה חלקית",
         "נקודות חשמל – בסככות צל ובמרכז שירות בלבד",
@@ -1480,7 +1480,7 @@ window.CAMPSITES = {
       "region": "דרום",
       "url": "https://www.parks.org.il/camping/חניון-לילה-חי-בר-יוטבתה/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=21",
-      "checkedAt": "2026-10-22T23:30:59+03:00",
+      "checkedAt": "2026-10-24T11:31:00+03:00",
       "facilities": [
         "תאורה מלאה",
         "נקודות חשמל",
@@ -1707,7 +1707,7 @@ window.CAMPSITES = {
       "region": "מרכז",
       "url": "https://www.parks.org.il/camping/חניון-לילה-הקסטל/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=20",
-      "checkedAt": "2026-10-22T23:31:07+03:00",
+      "checkedAt": "2026-10-24T11:31:08+03:00",
       "facilities": [
         "תאורה מלאה",
         "מקלחות מים חמים (10 תאי מקלחות)",
@@ -1894,7 +1894,7 @@ window.CAMPSITES = {
       "region": "מרכז",
       "url": "https://www.parks.org.il/camping/חניון-לילה-גן-לאומי-ירקון/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=22",
-      "checkedAt": "2026-10-22T23:31:15+03:00",
+      "checkedAt": "2026-10-24T11:31:16+03:00",
       "facilities": [
         "תאורת שטח",
         "מקלחות מים חמים לסירוגין (2 תאי מקלחות נשים ו- 2 תאי מקלחות גברים)",
@@ -2116,7 +2116,7 @@ window.CAMPSITES = {
       "region": "מרכז",
       "url": "https://www.parks.org.il/camping/חניון-לילה-גן-לאומי-תל-אשקלון/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=17",
-      "checkedAt": "2026-10-22T23:31:23+03:00",
+      "checkedAt": "2026-10-24T11:31:25+03:00",
       "facilities": [
         "תאורת שטח סולארית אקולוגית בחלקו המזרחי של החניון",
         "מקלחות מים חמים (4 תאי מקלחות נשים ו- 4 תאי מקלחות גברים)",
@@ -2293,7 +2293,7 @@ window.CAMPSITES = {
       "region": "צפון",
       "url": "https://www.parks.org.il/camping/חניון-לילה-גן-לאומי-אכזיב-וחוף-אכזיב/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=23",
-      "checkedAt": "2026-10-22T23:31:30+03:00",
+      "checkedAt": "2026-10-24T11:31:33+03:00",
       "facilities": [
         "חניון צפוני: תאורת שטח",
         "חניון צפוני: מקלחות (7 תאי מקלחות נשים ו- 4 תאי מקלחות גברים) מים חמים בשעות 18:00 בערב עד 9:00 בבוקר",
@@ -2607,7 +2607,7 @@ window.CAMPSITES = {
       "region": "צפון",
       "url": "https://www.parks.org.il/camping/חניון-לילה-גן-לאומי-גן-השלושה-סחנה/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=25",
-      "checkedAt": "2026-10-22T23:31:39+03:00",
+      "checkedAt": "2026-10-24T11:31:42+03:00",
       "facilities": [
         "תאורה סולרית – תאורת התמצאות",
         "נקודות חשמל (לקבוצות בלבד) 2 נקודות חשמל",
@@ -2772,7 +2772,7 @@ window.CAMPSITES = {
       "region": "צפון",
       "url": "https://www.parks.org.il/camping/חניון-לילה-גן-לאומי-חורשת-טל/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=9",
-      "checkedAt": "2026-10-22T23:31:47+03:00",
+      "checkedAt": "2026-10-24T11:31:49+03:00",
       "facilities": [
         "תאורת שטח",
         "מקלחות מים חמים (13 תאי מקלחות נשים ו- 14 תאי מקלחות גברים)",
@@ -3070,7 +3070,7 @@ window.CAMPSITES = {
       "region": "צפון",
       "url": "https://www.parks.org.il/camping/חניון-לילה-גן-לאומי-כוכב-הירדן/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=19",
-      "checkedAt": "2026-10-22T23:31:55+03:00",
+      "checkedAt": "2026-10-24T11:31:57+03:00",
       "facilities": [
         "תאורה כללית",
         "נקודות חשמל (לקבוצות בלבד)",
@@ -3233,7 +3233,7 @@ window.CAMPSITES = {
       "region": "צפון",
       "url": "https://www.parks.org.il/camping/חניון-לילה-גן-לאומי-מבצר-יחיעם/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=26",
-      "checkedAt": "2026-10-22T23:32:04+03:00",
+      "checkedAt": "2026-10-24T11:32:05+03:00",
       "facilities": [
         "תאורה",
         "נקודות חשמל",
@@ -3448,7 +3448,7 @@ window.CAMPSITES = {
       "region": "צפון",
       "url": "https://www.parks.org.il/camping/חניון-לילה-גן-לאומי-מעיין-חרוד/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=15",
-      "checkedAt": "2026-10-22T23:32:12+03:00",
+      "checkedAt": "2026-10-24T11:32:13+03:00",
       "facilities": [
         "תאורת התמצאות",
         "מקלחות מים חמים (12 תאי מקלחות נשים ו- 12 תאי מקלחות גברים)",
@@ -3703,7 +3703,7 @@ window.CAMPSITES = {
       "region": "צפון",
       "url": "https://www.parks.org.il/camping/חניון-לילה-חוות-משמר-הכרמל/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=24",
-      "checkedAt": "2026-10-22T23:32:20+03:00",
+      "checkedAt": "2026-10-24T11:32:20+03:00",
       "facilities": [
         "תאורת שטח",
         "מקלחות מים חמים (7 תאי מקלחות נשים ו- 7 תאי מקלחות גברים)",
@@ -3993,7 +3993,7 @@ window.CAMPSITES = {
       "region": "צפון",
       "url": "https://www.parks.org.il/camping/חניון-לילה-שמורת-טבע-יהודיה/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=18",
-      "checkedAt": "2026-10-22T23:32:28+03:00",
+      "checkedAt": "2026-10-24T11:32:28+03:00",
       "facilities": [
         "תאורת שטח – עוצמת אור בינונית",
         "מקלחות מים חמים (4 תאי מקלחות נשים ו-4 תאי מקלחות גברים)",
@@ -4139,7 +4139,7 @@ window.CAMPSITES = {
       "region": "צפון",
       "url": "https://www.parks.org.il/camping/חניון-לילה-שמורת-טבע-נחל-עמוד/",
       "bookingUrl": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=27",
-      "checkedAt": "2026-10-22T23:32:37+03:00",
+      "checkedAt": "2026-10-24T11:32:36+03:00",
       "facilities": [
         "תאורת שטח, תאורה מלאה, תאורה סולארית",
         "נקודות חשמל (לקבוצות בלבד)",
