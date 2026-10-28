@@ -1,8 +1,8 @@
 window.AVAILABILITY = {
-  "checkedAt": "2026-10-27T10:33:15+02:00",
+  "checkedAt": "2026-10-28T04:30:46+02:00",
   "results": {
     "13|2026-11-12|2026-11-14": {
-      "checkedAt": "2026-10-27T10:33:15+02:00",
+      "checkedAt": "2026-10-28T04:30:46+02:00",
       "comps": [
         {
           "comp": {
@@ -55,16 +55,6 @@ window.AVAILABILITY = {
             },
             {
               "name": "מאהל גדול קבוע מחיצה 05",
-              "fromPerNight": 860,
-              "rates": [
-                {
-                  "label": "מאהל גדול קבוע",
-                  "total": 1720
-                }
-              ]
-            },
-            {
-              "name": "מאהל גדול קבוע מחיצה 06",
               "fromPerNight": 860,
               "rates": [
                 {
@@ -135,16 +125,6 @@ window.AVAILABILITY = {
                   "total": 1720
                 }
               ]
-            },
-            {
-              "name": "מאהל גדול קבוע מחיצה 06",
-              "fromPerNight": 860,
-              "rates": [
-                {
-                  "label": "מאהל גדול קבוע",
-                  "total": 1720
-                }
-              ]
             }
           ],
           "soldOutHint": false,
@@ -201,16 +181,6 @@ window.AVAILABILITY = {
             },
             {
               "name": "מאהל גדול קבוע מחיצה 05",
-              "fromPerNight": 860,
-              "rates": [
-                {
-                  "label": "מאהל גדול קבוע",
-                  "total": 1720
-                }
-              ]
-            },
-            {
-              "name": "מאהל גדול קבוע מחיצה 06",
               "fromPerNight": 860,
               "rates": [
                 {
