@@ -1,8 +1,8 @@
 window.AVAILABILITY = {
-  "checkedAt": "2026-11-01T22:33:45+02:00",
+  "checkedAt": "2026-11-02T22:33:44+02:00",
   "results": {
     "13|2026-11-12|2026-11-14": {
-      "checkedAt": "2026-11-01T22:33:45+02:00",
+      "checkedAt": "2026-11-02T22:33:44+02:00",
       "comps": [
         {
           "comp": {
@@ -10,31 +10,8 @@ window.AVAILABILITY = {
             "children": 2,
             "infants": 0
           },
-          "lodging": [
-            {
-              "name": "לינת שטח באוהלים פרטיים",
-              "fromPerNight": 166,
-              "rates": [
-                {
-                  "label": "לינת שטח באוהלים פרטיים - מחיר רגיל",
-                  "total": 444
-                },
-                {
-                  "label": "לינת שטח באוהלים פרטיים - מחיר מנוי מטמון",
-                  "total": 332
-                },
-                {
-                  "label": "לינת שטח באוהלים פרטיים - מחיר משרת מילואים פעיל",
-                  "total": 376
-                },
-                {
-                  "label": "לינת שטח באוהלים פרטיים - מחיר חייל בשירות חובה ושירות לאומי",
-                  "total": 376
-                }
-              ]
-            }
-          ],
-          "soldOutHint": false,
+          "lodging": [],
+          "soldOutHint": true,
           "url": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=13&in=2026-11-12&out=2026-11-14&rooms=1&ad1=2&ch1=2&inf1=0"
         },
         {
@@ -43,31 +20,8 @@ window.AVAILABILITY = {
             "children": 3,
             "infants": 0
           },
-          "lodging": [
-            {
-              "name": "לינת שטח באוהלים פרטיים",
-              "fromPerNight": 201,
-              "rates": [
-                {
-                  "label": "לינת שטח באוהלים פרטיים - מחיר רגיל",
-                  "total": 538
-                },
-                {
-                  "label": "לינת שטח באוהלים פרטיים - מחיר מנוי מטמון",
-                  "total": 402
-                },
-                {
-                  "label": "לינת שטח באוהלים פרטיים - מחיר משרת מילואים פעיל",
-                  "total": 456
-                },
-                {
-                  "label": "לינת שטח באוהלים פרטיים - מחיר חייל בשירות חובה ושירות לאומי",
-                  "total": 470
-                }
-              ]
-            }
-          ],
-          "soldOutHint": false,
+          "lodging": [],
+          "soldOutHint": true,
           "url": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=13&in=2026-11-12&out=2026-11-14&rooms=1&ad1=2&ch1=3&inf1=0"
         },
         {
@@ -76,31 +30,8 @@ window.AVAILABILITY = {
             "children": 3,
             "infants": 1
           },
-          "lodging": [
-            {
-              "name": "לינת שטח באוהלים פרטיים",
-              "fromPerNight": 201,
-              "rates": [
-                {
-                  "label": "לינת שטח באוהלים פרטיים - מחיר רגיל",
-                  "total": 538
-                },
-                {
-                  "label": "לינת שטח באוהלים פרטיים - מחיר מנוי מטמון",
-                  "total": 402
-                },
-                {
-                  "label": "לינת שטח באוהלים פרטיים - מחיר משרת מילואים פעיל",
-                  "total": 456
-                },
-                {
-                  "label": "לינת שטח באוהלים פרטיים - מחיר חייל בשירות חובה ושירות לאומי",
-                  "total": 470
-                }
-              ]
-            }
-          ],
-          "soldOutHint": false,
+          "lodging": [],
+          "soldOutHint": true,
           "url": "https://secure-hotels.net/INPA/BE_Results.aspx?lang=heb&hotel=13&in=2026-11-12&out=2026-11-14&rooms=1&ad1=2&ch1=3&inf1=1"
         }
       ]
